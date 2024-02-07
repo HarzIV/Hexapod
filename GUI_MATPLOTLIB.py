@@ -3,6 +3,8 @@ from Config.Config import *
 #from UI.GUIcopy import *
 from UI.GUI import *
 
+#dddd
+
 def main():
     end_points = {"Lg0": (8,0,8),
                   "Lg1": (8,0,8),
