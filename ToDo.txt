@@ -1,0 +1,7 @@
+Implement xbox controller input transmission for later program usage.
+Finish Inverse Kinematics code.
+Write Serial interface library.
+Implement Bluetooth Serial communication.
+Finish 3d hexapod simulator.
+Write tkinter interface for matplot,
+with integrated matplot plot.
