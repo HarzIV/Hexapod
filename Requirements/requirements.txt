@@ -1,0 +1,7 @@
+#pip install -r requirements.txt
+ttkbootstrap==1.10.1
+tk==0.1.0
+matplotlib==3.8.2
+numpy==1.25.2
+pygame==2.5.1
+pyserial==3.5
