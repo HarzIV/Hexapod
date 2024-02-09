@@ -4,14 +4,14 @@ from Simulation.model import *
 from UI.GUI import Matplotlib3DPlotApp
 
 def main():
-    end_points = {"Lg0": (8,0,8),
-                  "Lg1": (8,0,8),
-                  "Lg2": (8,0,8),
-                  "Lg3": (8,0,8),
-                  "Lg4": (8,0,8),
-                  "Lg5": (8,0,8)}
+    end_points = {"Lg0": (19.09188309,0,-19.09188309),
+                  "Lg1": (0,0,-27),
+                  "Lg2": (-19.09188309,0,-19.09188309),
+                  "Lg3": (-19.09188309,0,19.09188309),
+                  "Lg4": (0,0,27),
+                  "Lg5": (19.09188309,0,19.09188309)}
     
-    Hex = Hexapod(origins, (5, 5, 7))
+    Hex = Hexapod(origins, Lg_lengths)
     Hex.plt_bot(angles, end_points)
     
     root = tk.Tk()

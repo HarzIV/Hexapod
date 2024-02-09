@@ -14,7 +14,11 @@ class Matplotlib3DPlotApp:
         self.root.title("Hexapod Control Center")
         self.style = Style(theme="vapor")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+        #
+        self.communication_options = ["A", "B", "C"]
 
+        # Frame for selecting all settings
         self.buttons_frame = ttk.Frame(self.root, style='warning')
         self.buttons_frame.grid(row=0, column=0, sticky='n', padx=10, pady=10)
 
@@ -23,6 +27,12 @@ class Matplotlib3DPlotApp:
 
         self.button2 = ttk.Button(self.buttons_frame, text="Button 2", command=self.button2_clicked)
         self.button2.pack(pady=5)
+        
+        self.selected_communication = tk.StringVar()
+        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, textvariable=self.selected_communication, state="readonly")
+        self.communication.pack(padx=5, pady=5)
+        self.communication.set("Communication Type")
+        self.communication.bind("<<ComboboxSelected>>", self.communication_init)
 
         # Create Button 2
         self.my_Button2 = ttk.Button(self.root, text="button!",
@@ -33,7 +43,18 @@ class Matplotlib3DPlotApp:
         self.plot_frame = ttk.Frame(self.root)
         self.plot_frame.grid(row=0, column=1, sticky='ne', padx=10, pady=10)
 
+    def on_closing(self):
+        #self.root.destroy()
+        quit()
 
+    def button1_clicked(self):
+        print("Button 1 clicked")
+
+    def button2_clicked(self):
+        print("Button 2 clicked")
+    
+    def communication_init(self, event):
+        print(str(self.selected_communication.get()))
         
     def generate_3d_plot(self, fig):
         '''# Set dark mode style for the plot
@@ -203,16 +224,6 @@ class Matplotlib3DPlotApp:
         canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-    
-    def on_closing(self):
-        #self.root.destroy()
-        quit()
-
-    def button1_clicked(self):
-        print("Button 1 clicked")
-
-    def button2_clicked(self):
-        print("Button 2 clicked")
 
 '''root = tk.Window(themename="vapor")
 

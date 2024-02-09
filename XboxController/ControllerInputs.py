@@ -13,6 +13,8 @@ num_joysticks = pygame.joystick.get_count()
 # Initialize all detected joysticks
 joysticks = [pygame.joystick.Joystick(i) for i in range(num_joysticks)]
 
+print(joysticks)
+
 # Dictionary to store all button and axis states
 button_positions = {"Button 0": 0,
                     "Button 1": 0,
@@ -106,4 +108,22 @@ def button_states():
 
 '''while True:
     get_joystick_pos(button_positions)
-    print(button_positions["Axis 3"], button_positions["Axis 2"])'''
+    for button in button_positions:
+        print(f"{button}: {button_positions[button]}")
+    time.sleep(5)'''
+    
+'''while True:
+    # Variable to store values in
+    changed_value = ()
+
+    # Finds the pressed button or axis and their states
+    for event in pygame.event.get():
+        if event.type == pygame.JOYBUTTONDOWN:
+            changed_value = (f"Button {event.button}", joysticks[0].get_button(event.button))
+            print(changed_value)
+        elif event.type == pygame.JOYBUTTONUP:
+            changed_value = (f"Button {event.button}", joysticks[0].get_button(event.button))
+            print(changed_value)
+        elif event.type == pygame.JOYAXISMOTION:
+            #changed_value = (f"Axis {event.axis}", joysticks[0].get_axis(event.axis))
+            pass'''
