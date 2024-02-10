@@ -2,33 +2,22 @@ from numpy import sin, cos, radians
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib
-matplotlib.use('TkAgg')
+
+# Activate interactive mode
 
 
-# Set dark mode style for the plot
+# Initialize Dark-Mode
 plt.style.use('dark_background')
 
 # Create a 3D plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
-# Plot name
-#ax.set_title('Hexapod Sim')
-
-# Define the names for each axis
-ax.set_xlabel('X')
-ax.set_ylabel('Y')
-ax.set_zlabel('Z')
-
 # Set initial camera angles
-#ax.view_init(elev=45, azim=45, roll=135)
 ax.view_init(elev=45, azim=90, roll=180)
 
 # Disable the user from changing the camera angle
 #ax.disable_mouse_rotation()
-
-# Disable all axis
-ax.set_axis_off()
 
 # Hexapod animation class
 class Hexapod():
@@ -44,7 +33,15 @@ class Hexapod():
         self.lg3 = self.leg(self.origins["Lg3"], self.lengths)
         self.lg4 = self.leg(self.origins["Lg4"], self.lengths)
         self.lg5 = self.leg(self.origins["Lg5"], self.lengths)
-
+        
+    def clr_plot(self):
+        # Clear the plot
+        ax.clear()
+        
+        # Disable Axis
+        ax.set_axis_off()
+        
+        # Regenerate standard structures
         # Leg origin wire frame
         x, y, z = [], [], []
 
@@ -63,6 +60,8 @@ class Hexapod():
         ax.scatter(self.origins[origin][0], self.origins[origin][1], 0, color="red")
 
     def plt_bot(self, angles, end_points):
+        # Clear plot and generate all necissary standart structures
+        self.clr_plot()
         
         # Generate all x, y, z positions for each leg
         self.lg0.plt_Leg(angles["Lg0"], end_points["Lg0"])

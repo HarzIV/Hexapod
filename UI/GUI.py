@@ -15,7 +15,10 @@ class Matplotlib3DPlotApp:
         self.style = Style(theme="vapor")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
-        #
+        # Define canvas
+        #self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
+        
+        # Dropdown menu variables
         self.communication_options = ["A", "B", "C"]
 
         # Frame for selecting all settings
@@ -54,9 +57,9 @@ class Matplotlib3DPlotApp:
         print("Button 2 clicked")
     
     def communication_init(self, event):
-        print(str(self.selected_communication.get()))
+        print(self.selected_communication.get())
         
-    def generate_3d_plot(self, fig):
+    def Simulation_init(self, fig):
         '''# Set dark mode style for the plot
         plt.style.use('dark_background')
 
@@ -221,9 +224,11 @@ class Matplotlib3DPlotApp:
         Hex.plt_bot(angles, end_points)'''
 
         # Embed the plot into the Tkinter window
-        canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
-        canvas.draw()
-        canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+    def update_Simulation(self):
+        self.canvas.draw()
 
 '''root = tk.Window(themename="vapor")
 
