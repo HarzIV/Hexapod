@@ -3,13 +3,6 @@ from Config.Config import *
 from Simulation.model import *
 from UI.GUI import Matplotlib3DPlotApp
 
-end_points = {"Lg0": (19.09188309,0,-19.09188309),
-                  "Lg1": (0,0,-27),
-                  "Lg2": (-19.09188309,0,-19.09188309),
-                  "Lg3": (-19.09188309,0,19.09188309),
-                  "Lg4": (0,0,27),
-                  "Lg5": (19.09188309,0,19.09188309)}
-
 new_angles = {"Lg0": (0,0,0),
                   "Lg1": (0,0,0),
                   "Lg2": (0,0,0),

@@ -36,11 +36,34 @@ class Matplotlib3DPlotApp:
         self.communication.pack(padx=5, pady=5)
         self.communication.set("Communication Type")
         self.communication.bind("<<ComboboxSelected>>", self.communication_init)
+        
+        # Create frame for the sliders setting the angles
+        self.angle_frame = ttk.Frame(self.root)
+        self.angle_frame.grid(row=0, column=2, sticky='ne', padx=10, pady=10)
+        
+        # Label to display theta  value
+        self.theta0_label = ttk.Label(self.angle_frame, text="Theta  0:")
+        self.theta0_label.grid(pady=5)
 
-        # Create Button 2
-        self.my_Button2 = ttk.Button(self.root, text="button!",
-            bootstyle="primary, link", command=self.button1_clicked)
-        self.my_Button2.grid(row=0, column=2, pady=20)
+        # Slider for theta0
+        self.theta0_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta0_angle.grid(pady=5)
+        
+        # Label to display theta  value
+        self.theta1_label = ttk.Label(self.angle_frame, text="Theta  1:")
+        self.theta1_label.grid(pady=5)
+
+        # Slider for theta1
+        self.theta1_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta1_angle.grid(pady=5)
+        
+        # Label to display theta  value
+        self.theta2_label = ttk.Label(self.angle_frame, text="Theta  2:")
+        self.theta2_label.grid(pady=5)
+        
+        # Slider for theta2
+        self.theta2_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta2_angle.grid(pady=5)
 
         # Create a frame for the plot
         self.plot_frame = ttk.Frame(self.root)
@@ -57,7 +80,20 @@ class Matplotlib3DPlotApp:
         print("Button 2 clicked")
     
     def communication_init(self, event):
-        print(self.selected_communication.get())
+        print(str(self.selected_communication.get()))
+        
+    def change_angles(self, event):
+        # Get the slider values
+        self.theta0 = int(self.theta0_angle.get())
+        self.theta1 = int(self.theta1_angle.get())
+        self.theta2 = int(self.theta2_angle.get())
+        
+        # Reconfigure the label text according to the new values
+        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
+        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
+        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
+        
+        return self.theta0, self.theta1, self.theta2
         
     def Simulation_init(self, fig):
         '''# Set dark mode style for the plot
