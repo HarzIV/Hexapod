@@ -1,4 +1,4 @@
-from numpy import sin, cos, radians
+from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -55,17 +55,17 @@ class Hexapod():
         # Front indicator
         ax.scatter(self.origins[origin][0], self.origins[origin][1], 0, color="red")
 
-    def plt_bot(self, angles, end_points):
+    def plt_bot(self, angles):
         # Clear plot and generate all necissary standart structures
         self.clr_plot()
         
         # Generate all x, y, z positions for each leg
-        self.lg0.plt_Leg(angles["Lg0"], end_points["Lg0"])
-        self.lg1.plt_Leg(angles["Lg1"], end_points["Lg1"])
-        self.lg2.plt_Leg(angles["Lg2"], end_points["Lg2"])
-        self.lg3.plt_Leg(angles["Lg3"], end_points["Lg3"])
-        self.lg4.plt_Leg(angles["Lg4"], end_points["Lg4"])
-        self.lg5.plt_Leg(angles["Lg5"], end_points["Lg5"])
+        self.lg0.plt_Leg(angles["Lg0"])
+        self.lg1.plt_Leg(angles["Lg1"])
+        self.lg2.plt_Leg(angles["Lg2"])
+        self.lg3.plt_Leg(angles["Lg3"])
+        self.lg4.plt_Leg(angles["Lg4"])
+        self.lg5.plt_Leg(angles["Lg5"])
 
     class leg():
 
@@ -73,12 +73,10 @@ class Hexapod():
             self.lg_origin = lg_origin
             self.lengths = lengths
 
-        def calc_end_point(self, angles, end_point, accuracy=2):
+        def calc_end_point(self, angles, accuracy=2):
 
-            theta0, theta1 = angles
-            theta0, theta1 = radians(theta0), radians(theta1)
-
-            x2_end, y2_end, z2_end = end_point
+            theta0, theta1, theta2 = angles
+            theta0, theta1, theta2 = radians(theta0), radians(theta1), radians(theta2)
 
             xo, yo, zo = self.lg_origin
             L0, L1, L2 = self.lengths
@@ -98,6 +96,10 @@ class Hexapod():
             limb1_x = [x0_end, x1_end]
             limb1_y = [y0_end, y1_end]
             limb1_z = [z0_end, z1_end]
+            
+            x2_end = round((x0_end + cos(theta0) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
+            y2_end = round((yo + ((cos(theta2 + pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 + pi) * L2) * cos(theta1))), accuracy)
+            z2_end = round((z0_end + sin(theta1) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
 
             limb2_x = [x1_end, x2_end]
             limb2_y = [y1_end, y2_end]
@@ -107,9 +109,9 @@ class Hexapod():
 
             return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
 
-        def plt_Leg(self, angles, end_point):
+        def plt_Leg(self, angles):
             
-            limb0, limb1, limb2 = self.calc_end_point(angles, end_point)
+            limb0, limb1, limb2 = self.calc_end_point(angles)
 
             x0, y0, z0 = limb0
             x1, y1, z1 = limb1
