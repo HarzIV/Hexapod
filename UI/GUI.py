@@ -8,79 +8,96 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D'''
 
 class Matplotlib3DPlotApp:
-    def __init__(self, root):
+    def __init__(self, root, angles):
         # Initialize root functions
         self.root = root
         self.root.title("Hexapod Control Center")
         self.style = Style(theme="vapor")
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         
+        # Define variables
+        self.angles = angles
+        self.theta0, self.theta1, self.theta2 = 0 + angles["Lg0"][0], 0 + angles["Lg0"][1], 0 + angles["Lg0"][2]
+        
         # Define canvas
         #self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         
         # Dropdown menu variables
         self.communication_options = ["A", "B", "C"]
+        
+        # Frame for switching between pages
+        self.pages = ttk.Frame(self.root, style="warning")
+        self.pages.grid(row=0, column=0, columnspan=3, sticky='nsew')
+        
+        # Buttons for switching between pages
+        # Page where the user can make basic settings
+        self.main_page = ttk.Button(self.pages, text="Main Page", command=self.switch2main)
+        self.main_page.pack(side=tk.LEFT)
+        
+        # Page where the user can set all angles individualy
+        self.angle_page = ttk.Button(self.pages, text="Angle Page", command=self.switch2angle)
+        self.angle_page.pack(side=tk.LEFT)
 
         # Frame for selecting all settings
         self.buttons_frame = ttk.Frame(self.root, style='warning')
-        self.buttons_frame.grid(row=0, column=0, sticky='n', padx=10, pady=10)
-
-        self.button1 = ttk.Button(self.buttons_frame, text="Button 1", command=self.button1_clicked)
-        self.button1.pack(pady=5)
-
-        self.button2 = ttk.Button(self.buttons_frame, text="Button 2", command=self.button2_clicked)
-        self.button2.pack(pady=5)
+        self.buttons_frame.grid(row=1, column=0, sticky='n', padx=(0, 10), pady=(0, 10))
         
-        self.selected_communication = tk.StringVar()
-        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, textvariable=self.selected_communication, state="readonly")
+        # Dropdown menu to set the communication method between the computer and the hexapod
+        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
         self.communication.pack(padx=5, pady=5)
         self.communication.set("Communication Type")
         self.communication.bind("<<ComboboxSelected>>", self.communication_init)
         
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self.root)
-        self.angle_frame.grid(row=0, column=2, sticky='ne', padx=10, pady=10)
+        self.angle_frame.grid(row=1, column=2, sticky='ne', padx=10, pady=(0, 10))
         
-        # Label to display theta  value
+        # Label to display theta 0 value
         self.theta0_label = ttk.Label(self.angle_frame, text="Theta  0:")
+        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
         self.theta0_label.grid(pady=5)
 
         # Slider for theta0
         self.theta0_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta0_angle.set(self.theta0)
         self.theta0_angle.grid(pady=5)
         
-        # Label to display theta  value
+        # Label to display theta 1 value
         self.theta1_label = ttk.Label(self.angle_frame, text="Theta  1:")
+        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
         self.theta1_label.grid(pady=5)
 
         # Slider for theta1
         self.theta1_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta1_angle.set(self.theta1)
         self.theta1_angle.grid(pady=5)
         
-        # Label to display theta  value
+        # Label to display theta 2 value
         self.theta2_label = ttk.Label(self.angle_frame, text="Theta  2:")
+        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
         self.theta2_label.grid(pady=5)
         
         # Slider for theta2
         self.theta2_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta2_angle.set(self.theta2)
         self.theta2_angle.grid(pady=5)
 
         # Create a frame for the plot
         self.plot_frame = ttk.Frame(self.root)
-        self.plot_frame.grid(row=0, column=1, sticky='ne', padx=10, pady=10)
+        self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
 
     def on_closing(self):
         #self.root.destroy()
         quit()
 
-    def button1_clicked(self):
+    def switch2main(self):
         print("Button 1 clicked")
 
-    def button2_clicked(self):
+    def switch2angle(self):
         print("Button 2 clicked")
     
     def communication_init(self, event):
-        print(str(self.selected_communication.get()))
+        print(str(self.communication.get()))
         
     def change_angles(self, event):
         # Get the slider values
