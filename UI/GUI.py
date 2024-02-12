@@ -30,12 +30,12 @@ class Matplotlib3DPlotApp:
 
         self.button2 = ttk.Button(self.buttons_frame, text="Button 2", command=self.button2_clicked)
         self.button2.pack(pady=5)
-        
-        self.selected_communication = tk.StringVar()
-        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, textvariable=self.selected_communication, state="readonly")
-        self.communication.pack(padx=5, pady=5)
+
+        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
         self.communication.set("Communication Type")
         self.communication.bind("<<ComboboxSelected>>", self.communication_init)
+        self.communication.pack(padx=5, pady=5)
+
         
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self.root)
@@ -80,7 +80,7 @@ class Matplotlib3DPlotApp:
         print("Button 2 clicked")
     
     def communication_init(self, event):
-        print(str(self.selected_communication.get()))
+        print(self.communication.get())
         
     def change_angles(self, event):
         # Get the slider values
