@@ -107,6 +107,9 @@ class Matplotlib3DPlotApp:
         self.theta1 = int(self.theta1_angle.get())
         self.theta2 = int(self.theta2_angle.get())
         
+        # Change angles in dictionary to new angles
+        self.angles["Lg0"] = self.theta0, self.theta1, self.theta2
+        
         # Reconfigure the label text according to the new values
         self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
         self.theta1_label.config(text=f"Theta 1 : {self.theta1}")

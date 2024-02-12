@@ -24,10 +24,20 @@ app.update_Simulation()
 def next_plot():
     Hex.plt_bot(new_angles)
     app.update_Simulation()
+    
+def angle():
+    print(angles)
+    
+    Hex.plt_bot(angles)
+    app.update_Simulation()
+    
+    root.after(100, angle)
 
 def main():
     
     #root.after(3000, next_plot)
+    
+    root.after(100, angle)
 
     root.mainloop()
 
