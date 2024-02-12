@@ -47,6 +47,8 @@ class Matplotlib3DPlotApp:
         self.communication.pack(padx=5, pady=5)
         self.communication.set("Communication Type")
         self.communication.bind("<<ComboboxSelected>>", self.communication_init)
+        self.communication.pack(padx=5, pady=5)
+
         
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self.root)
