@@ -7,115 +7,68 @@ from ttkbootstrap import Style
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D'''
 
-class Matplotlib3DPlotApp:
-    def __init__(self, root, angles):
+class Matplotlib3DPlotApp(tk.Tk):
+    def __init__(self, angles, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
         # Initialize root functions
-        self.root = root
-        self.root.title("Hexapod Control Center")
+        self.title("Hexapod Control Center")
         self.style = Style(theme="vapor")
-        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-        
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
         # Define variables
         self.angles = angles
-        self.theta0, self.theta1, self.theta2 = 0 + angles["Lg0"][0], 0 + angles["Lg0"][1], 0 + angles["Lg0"][2]
-        
-        # Define canvas
-        #self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
-        
-        # Dropdown menu variables
-        self.communication_options = ["A", "B", "C"]
-        
+
+        # Create a container to hold all the pages
+        self.container = ttk.Frame(self)
+        self.container.grid(row=1, column=0)
+
         # Frame for switching between pages
-        self.pages = ttk.Frame(self.root, style="warning")
-        self.pages.grid(row=0, column=0, columnspan=3, sticky='nsew')
-        
-        # Buttons for switching between pages
-        # Page where the user can make basic settings
-        self.main_page = ttk.Button(self.pages, text="Main Page", command=self.switch2main)
-        self.main_page.pack(side=tk.LEFT)
-        
-        # Page where the user can set all angles individualy
-        self.angle_page = ttk.Button(self.pages, text="Angle Page", command=self.switch2angle)
-        self.angle_page.pack(side=tk.LEFT)
+        self.pages_frame = ttk.Frame(self, style="warning")
+        self.pages_frame.grid(row=0, column=0, columnspan=3, sticky='nw')
 
-        # Frame for selecting all settings
-        self.buttons_frame = ttk.Frame(self.root, style='warning')
-        self.buttons_frame.grid(row=1, column=0, sticky='n', padx=(0, 10), pady=(0, 10))
-        
-        # Dropdown menu to set the communication method between the computer and the hexapod
-        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
-        self.communication.pack(padx=5, pady=5)
-        self.communication.set("Communication Type")
-        self.communication.bind("<<ComboboxSelected>>", self.communication_init)
-        self.communication.pack(padx=5, pady=5)
+        # Page list
+        self.page_list = (main_page, angle_page)
 
-        
-        # Create frame for the sliders setting the angles
-        self.angle_frame = ttk.Frame(self.root)
-        self.angle_frame.grid(row=1, column=2, sticky='ne', padx=10, pady=(0, 10))
-        
-        # Label to display theta 0 value
-        self.theta0_label = ttk.Label(self.angle_frame, text="Theta  0:")
-        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
-        self.theta0_label.grid(pady=5)
+        # Page names
+        self.page_names = tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in self.page_list for class_str in [class_name.__name__])
 
-        # Slider for theta0
-        self.theta0_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta0_angle.set(self.theta0)
-        self.theta0_angle.grid(pady=5)
-        
-        # Label to display theta 1 value
-        self.theta1_label = ttk.Label(self.angle_frame, text="Theta  1:")
-        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
-        self.theta1_label.grid(pady=5)
+        # Page Dictionary
+        self.pages = {}
 
-        # Slider for theta1
-        self.theta1_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta1_angle.set(self.theta1)
-        self.theta1_angle.grid(pady=5)
-        
-        # Label to display theta 2 value
-        self.theta2_label = ttk.Label(self.angle_frame, text="Theta  2:")
-        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
-        self.theta2_label.grid(pady=5)
-        
-        # Slider for theta2
-        self.theta2_angle = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta2_angle.set(self.theta2)
-        self.theta2_angle.grid(pady=5)
+        # Add pages to the dictionary
+        for Page in self.page_list:
+            page_name = Page.__name__
+            page = Page(parent=self.container, style=self.style, controller=self)
+            self.pages[page_name] = page
+            page.grid(row=0, column=0, sticky="nsew")
 
-        # Create a frame for the plot
-        self.plot_frame = ttk.Frame(self.root)
-        self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
+        self.show_page("main_page")
+
+        # Generates all individual buttons for selecting different pages for every page class is self.page_list
+        for button_name, page_class in zip(self.page_names, self.page_list):
+            # Define a function that captures the current value of page_class
+            def create_command(class_name):
+                return lambda: self.show_page(class_name)
+            
+            # Create a command function using the current value of page_class
+            command = create_command(page_class.__name__)
+            
+            # Create the button with the command function
+            self.page_button = ttk.Button(self.pages_frame, text=button_name, command=command)
+            self.page_button.pack(side=tk.LEFT)
 
     def on_closing(self):
         #self.root.destroy()
         quit()
-
-    def switch2main(self):
-        print("Button 1 clicked")
-
-    def switch2angle(self):
-        print("Button 2 clicked")
+    
+    def show_page(self, page_name):
+        # Show the page with the given page name
+        page = self.pages[page_name]
+        page.tkraise()
     
     def communication_init(self, event):
         print(str(self.communication.get()))
-        
-    def change_angles(self, event):
-        # Get the slider values
-        self.theta0 = int(self.theta0_angle.get())
-        self.theta1 = int(self.theta1_angle.get())
-        self.theta2 = int(self.theta2_angle.get())
-        
-        # Change angles in dictionary to new angles
-        self.angles["Lg0"] = self.theta0, self.theta1, self.theta2
-        
-        # Reconfigure the label text according to the new values
-        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
-        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
-        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
-        
-        return self.theta0, self.theta1, self.theta2
         
     def Simulation_init(self, fig):
         '''# Set dark mode style for the plot
@@ -288,8 +241,102 @@ class Matplotlib3DPlotApp:
     def update_Simulation(self):
         self.canvas.draw()
 
-'''root = tk.Window(themename="vapor")
+class main_page(tk.Frame):
+    def __init__(self, parent, style, controller):
+        tk.Frame.__init__(self, parent, background=style.colors.primary)
+        self.parent = parent
+        self.style = style
+        self.controller = controller
 
-app = Matplotlib3DPlotApp(root)
+        # Dropdown menu variables
+        self.communication_options = ["A", "B", "C"]
 
-root.mainloop()'''
+        # Frame for selecting all settings
+        self.buttons_frame = ttk.Frame(self, style='warning')
+        self.buttons_frame.grid(row=1, column=0, sticky='n', padx=(0, 10), pady=(0, 10))
+        
+        # Dropdown menu to set the communication method between the computer and the hexapod
+        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
+        self.communication.grid(padx=5, pady=5)
+        self.communication.set("Communication Type")
+        self.communication.bind("<<ComboboxSelected>>", self.communication_init)
+
+        # Create a frame for the plot
+        self.plot_frame = ttk.Frame(self)
+        self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
+    
+    def communication_init(self, event):
+        print(str(self.communication.get()))
+
+class angle_page(tk.Frame):
+    def __init__(self, parent, style, controller):
+        tk.Frame.__init__(self, parent, background=style.colors.primary)
+        self.parent = parent
+        self.style = style
+        self.controller = controller
+
+        # Define variables
+        self.angles = self.controller.angles
+        self.theta0, self.theta1, self.theta2 = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
+
+        # Create frame for the sliders setting the angles
+        self.angle_frame = ttk.Frame(self)
+        self.angle_frame.grid(row=1, column=2, sticky='ne', padx=10, pady=(0, 10))
+        
+        # Label to display theta 0 value
+        self.theta0_label = ttk.Label(self.angle_frame, text="Theta  0:")
+        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
+        self.theta0_label.grid(pady=5)
+
+        # Slider for theta0
+        self.theta0_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta0_slider.set(self.theta0)
+        self.theta0_slider.grid(pady=5)
+        
+        # Label to display theta 1 value
+        self.theta1_label = ttk.Label(self.angle_frame, text="Theta  1:")
+        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
+        self.theta1_label.grid(pady=5)
+
+        # Slider for theta1
+        self.theta1_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta1_slider.set(self.theta1)
+        self.theta1_slider.grid(pady=5)
+        
+        # Label to display theta 2 value
+        self.theta2_label = ttk.Label(self.angle_frame, text="Theta  2:")
+        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
+        self.theta2_label.grid(pady=5)
+        
+        # Slider for theta2
+        self.theta2_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
+        self.theta2_slider.set(self.theta2)
+        self.theta2_slider.grid(pady=5)
+
+    def change_angles(self, event):
+        # Get the slider values
+        self.theta0 = int(self.theta0_slider.get())
+        self.theta1 = int(self.theta1_slider.get())
+        self.theta2 = int(self.theta2_slider.get())
+        
+        # Change angles in dictionary to new angles
+        self.angles["Lg0"] = self.theta0, self.theta1, self.theta2
+        
+        # Reconfigure the label text according to the new values
+        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
+        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
+        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
+        
+        return self.theta0, self.theta1, self.theta2
+
+def main():
+    app = Matplotlib3DPlotApp(angles = {"Lg0": (-45, 45, 270),
+          "Lg1": (-90, 45, 270),
+          "Lg2": (-135, 45, 270),
+          "Lg3": (-225, 45, 90),
+          "Lg4": (-270, 45, 90),
+          "Lg5": (-315, 45, 90)})
+    app.mainloop()
+
+if __name__ == "__main__":
+    main()

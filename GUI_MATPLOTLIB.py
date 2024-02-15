@@ -15,31 +15,31 @@ Hex.plt_bot(angles)
 
 plt.ion()
 
-root = tk.Tk()
+#root = tk.Tk()
 
-app = Matplotlib3DPlotApp(root, angles)
-app.Simulation_init(fig)
-app.update_Simulation()
+app = Matplotlib3DPlotApp(angles)
+#app.Simulation_init(fig)
+#app.update_Simulation()
 
 def next_plot():
     Hex.plt_bot(new_angles)
     app.update_Simulation()
     
 def angle():
-    print(angles)
-    
-    Hex.plt_bot(angles)
+    Hex.plt_bot(angles=angles)
     app.update_Simulation()
     
-    root.after(100, angle)
+    #root.after(100, angle)
 
 def main():
     
     #root.after(3000, next_plot)
     
-    root.after(100, angle)
+    #root.after(100, angle)
 
-    root.mainloop()
+    #root.mainloop()
+
+    app.mainloop()
 
 if __name__ == "__main__":
     main()

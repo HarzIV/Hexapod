@@ -1,37 +1,25 @@
-import tkinter as tk
-from tkinter import ttk
+def transform_tuple(tuple_of_classes):
+    return tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in tuple_of_classes for class_str in [class_name.__name__])
 
-class MyApp(tk.Tk):
-    def __init__(self):
-        super().__init__()
+# Example usage:
+class main_page_home:
+    pass
 
-        self.title("ComboBox Example")
-        self.geometry("300x200")
+class main_page_about_us:
+    pass
 
-        # Create an instance of MyFrame
-        self.my_frame = MyFrame(self)
-        self.my_frame.pack(pady=10, padx=10)
+class sidebar:
+    pass
 
-class MyFrame(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
+class footer:
+    pass
 
-        # Create a label
-        self.label = tk.Label(self, text="Select an option:")
-        self.label.pack(pady=5)
+class main_page_contact_us:
+    pass
 
-        # Create a combo box
-        self.combo_box = ttk.Combobox(self, values=["Option 1", "Option 2", "Option 3"])
-        self.combo_box.pack(pady=5)
+class other_page_services:
+    pass
 
-        # Create a button to get the selected option
-        self.button = tk.Button(self, text="Get Selected Option", command=self.get_selected_option)
-        self.button.pack(pady=5)
-
-    def get_selected_option(self):
-        selected_option = self.combo_box.get()
-        print("Selected Option:", selected_option)
-
-if __name__ == "__main__":
-    app = MyApp()
-    app.mainloop()
+classes_tuple = (main_page_home, main_page_about_us, sidebar, footer, main_page_contact_us, other_page_services)
+transformed_tuple = transform_tuple(classes_tuple)
+print(transformed_tuple)
