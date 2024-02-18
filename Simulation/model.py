@@ -56,7 +56,7 @@ class Hexapod():
         ax.scatter(self.origins[origin][0], self.origins[origin][1], 0, color="red")
 
     def plt_bot(self, angles):
-        # Clear plot and generate all necissary standart structures
+        # Clear plot and generate all necessary standard structures
         self.clr_plot()
         
         # Generate all x, y, z positions for each leg

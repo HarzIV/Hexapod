@@ -18,8 +18,8 @@ plt.ion()
 #root = tk.Tk()
 
 app = Matplotlib3DPlotApp(angles)
-#app.Simulation_init(fig)
-#app.update_Simulation()
+app.Simulation_init(fig)
+app.update_Simulation()
 
 def next_plot():
     Hex.plt_bot(new_angles)

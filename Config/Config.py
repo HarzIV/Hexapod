@@ -1,12 +1,12 @@
 # Dictionary's to store dynamic variables that have multiple instances
 
 # Dictionary to store servo angles
-angles = {"Lg0": (-45, 45, 270),
-          "Lg1": (-90, 45, 270),
-          "Lg2": (-135, 45, 270),
-          "Lg3": (-225, 45, 90),
-          "Lg4": (-270, 45, 90),
-          "Lg5": (-315, 45, 90)}
+angles = {"Lg0": [-45, 45, 270],
+          "Lg1": [-90, 45, 270],
+          "Lg2": [-135, 45, 270],
+          "Lg3": [-225, 45, 90],
+          "Lg4": [-270, 45, 90],
+          "Lg5": [-315, 45, 90]}
 
 # Dictionary to store all origin's for the individual legs
 origins = {"Lg0": (5, 0, -5),

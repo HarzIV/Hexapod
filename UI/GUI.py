@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
+from functools import partial
 
 '''from numpy import sin, cos, radians
 import matplotlib.pyplot as plt
@@ -26,6 +27,9 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Frame for switching between pages
         self.pages_frame = ttk.Frame(self, style="warning")
         self.pages_frame.grid(row=0, column=0, columnspan=3, sticky='nw')
+
+        self.plot_frame = ttk.Frame(self)
+        self.plot_frame.grid(row=1, column=0)
 
         # Page list
         self.page_list = (main_page, angle_page)
@@ -277,65 +281,113 @@ class angle_page(tk.Frame):
 
         # Define variables
         self.angles = self.controller.angles
-        self.theta0, self.theta1, self.theta2 = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
+
+        # Remove all negative sign from the angles for a nicer visualization
+        self.angles = {key: [(angle + 360) if angle < 0 else angle for angle in value] for key, value in self.angles.items()}
+        
+        self.angles_theta = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
 
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self)
-        self.angle_frame.grid(row=1, column=2, sticky='ne', padx=10, pady=(0, 10))
-        
-        # Label to display theta 0 value
-        self.theta0_label = ttk.Label(self.angle_frame, text="Theta  0:")
-        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
-        self.theta0_label.grid(pady=5)
+        self.angle_frame.grid(row=0, column=0, sticky='ne', padx=(0, 10), pady=(0, 10))
 
-        # Slider for theta0
-        self.theta0_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta0_slider.set(self.theta0)
-        self.theta0_slider.grid(pady=5)
-        
-        # Label to display theta 1 value
-        self.theta1_label = ttk.Label(self.angle_frame, text="Theta  1:")
-        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
-        self.theta1_label.grid(pady=5)
+        # Dictionary for frames for all labels and sliders
+        self.Frames = {}
 
-        # Slider for theta1
-        self.theta1_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta1_slider.set(self.theta1)
-        self.theta1_slider.grid(pady=5)
-        
-        # Label to display theta 2 value
-        self.theta2_label = ttk.Label(self.angle_frame, text="Theta  2:")
-        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
-        self.theta2_label.grid(pady=5)
-        
-        # Slider for theta2
-        self.theta2_slider = ttk.Scale(self.angle_frame, from_=0, to=360, command=self.change_angles, orient=tk.HORIZONTAL)
-        self.theta2_slider.set(self.theta2)
-        self.theta2_slider.grid(pady=5)
+        # Tuple to store limb color options
+        self.limb_colors = ("success", "danger", "info")
 
-    def change_angles(self, event):
-        # Get the slider values
-        self.theta0 = int(self.theta0_slider.get())
-        self.theta1 = int(self.theta1_slider.get())
-        self.theta2 = int(self.theta2_slider.get())
-        
-        # Change angles in dictionary to new angles
-        self.angles["Lg0"] = self.theta0, self.theta1, self.theta2
-        
-        # Reconfigure the label text according to the new values
-        self.theta0_label.config(text=f"Theta 0 : {self.theta0}")
-        self.theta1_label.config(text=f"Theta 1 : {self.theta1}")
-        self.theta2_label.config(text=f"Theta 2 : {self.theta2}")
-        
-        return self.theta0, self.theta1, self.theta2
+        # Dictionaries for all angle sliders
+        self.sliders = {}
+
+        # Dictionaries for all angle labels
+        self.labels = {}
+
+        # Frames for each leg
+        for leg_side in range(2):
+            for leg in range(3):
+                # Create frame
+                Frame = ttk.Frame(self.angle_frame)
+
+                # Rectify self.Frames according to Frame
+                self.Frames[f"Frame{(leg_side*3)+leg}"] = Frame
+
+                # Configure Frame
+                Frame.grid(row=leg, column=leg_side, padx=5, pady=5)
+
+        # Generates all individual sliders and labels for changing all angels individually
+        for (leg, angles), Frame in zip(self.angles.items(), self.Frames.values()):
+            # Generate empty dictionaries to store labels and slider
+            label_storage = {}
+            slider_storage = {}
+            
+            for limb, (color, angle) in enumerate(zip(self.limb_colors, angles)):
+                # Generate label name
+                label_name = f"theta{limb}_label"
+
+                # Generate label
+                label = ttk.Label(Frame, bootstyle=color, text=f"Theta{limb}:")
+
+                # Append new label
+                label_storage[label_name] = label
+
+                # Configure label
+                label.config(text=f"Theta{limb}: {angle}")
+                label.grid(pady=5)
+
+                # Generate slider name
+                slider_name = f"theta{limb}_slider"
+
+                # Generate slider
+                slider = ttk.Scale(Frame, bootstyle=color, from_=0, to=360, command=partial(self.change_angles, leg=leg, angle=limb), orient=tk.HORIZONTAL)
+
+                # Append new slider to temporary storage list
+                slider_storage[slider_name] = slider
+
+                # Configure slider
+                slider.set(self.angles_theta[limb])
+                slider.grid(pady=5)
+
+            # Rectify main label with label_storage
+            self.labels[leg] = label_storage
+            
+            # Rectify main sliders with slider_storage
+            self.sliders[leg] = slider_storage
+
+    def change_angles(self, value, leg, angle):
+        # Convert the value to an integer
+        new_angle = int(float(value))
+
+        # Update the label text with the new angle
+        self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
+
+        # Update the angle in the angles dictionary
+        self.angles[leg][angle] = new_angle
+
+    def change_angles1(self, event):
+        # Rectify self.angles and all labels
+        for leg_labels, (leg, leg_sliders) in zip(self.labels.values(), self.sliders.items()):
+
+            # Iterates through all elements of a specific leg to find new values and rectify them
+            for index, (label, slider) in enumerate(zip(leg_labels.values(), leg_sliders.values())):
+                # Get angle from current slider
+                angle = int(slider.get())
+
+                # Set label text to new angle
+                label.config(text=f"Theta{index}: {angle}")
+
+                # Rectify angle in angles to new angle
+                self.angles[leg][index] = angle
 
 def main():
-    app = Matplotlib3DPlotApp(angles = {"Lg0": (-45, 45, 270),
-          "Lg1": (-90, 45, 270),
-          "Lg2": (-135, 45, 270),
-          "Lg3": (-225, 45, 90),
-          "Lg4": (-270, 45, 90),
-          "Lg5": (-315, 45, 90)})
+    app = Matplotlib3DPlotApp(angles = {
+    "Lg0": [-45, 45, 270],
+    "Lg1": [-90, 45, 270],
+    "Lg2": [-135, 45, 270],
+    "Lg3": [-225, 45, 90],
+    "Lg4": [-270, 45, 90],
+    "Lg5": [-315, 45, 90]})
+
     app.mainloop()
 
 if __name__ == "__main__":
