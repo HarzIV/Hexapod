@@ -4,9 +4,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
 from functools import partial
 
-'''from numpy import sin, cos, radians
+from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D'''
+from mpl_toolkits.mplot3d import Axes3D
 
 class Matplotlib3DPlotApp(tk.Tk):
     def __init__(self, angles, *args, **kwargs):
@@ -28,8 +28,12 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.pages_frame = ttk.Frame(self, style="warning")
         self.pages_frame.grid(row=0, column=0, columnspan=3, sticky='nw')
 
+        # Frame for plot
         self.plot_frame = ttk.Frame(self)
-        self.plot_frame.grid(row=1, column=0)
+        self.plot_frame.grid(row=1, column=3)
+
+        # Initialize simulation
+        self.Simulation_init()
 
         # Page list
         self.page_list = (main_page, angle_page)
@@ -74,31 +78,19 @@ class Matplotlib3DPlotApp(tk.Tk):
     def communication_init(self, event):
         print(str(self.communication.get()))
         
-    def Simulation_init(self, fig):
-        '''# Set dark mode style for the plot
+    def Simulation_init(self):
+        # Initialize Dark-Mode
         plt.style.use('dark_background')
 
         # Create a 3D plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        # Plot name
-        #ax.set_title('Hexapod Sim')
-
-        # Define the names for each axis
-        ax.set_xlabel('X')
-        ax.set_ylabel('Y')
-        ax.set_zlabel('Z')
-
         # Set initial camera angles
-        #ax.view_init(elev=45, azim=45, roll=135)
         ax.view_init(elev=45, azim=90, roll=180)
 
         # Disable the user from changing the camera angle
         #ax.disable_mouse_rotation()
-
-        # Disable all axis
-        ax.set_axis_off()
 
         # Hexapod animation class
         class Hexapod():
@@ -114,7 +106,15 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.lg3 = self.leg(self.origins["Lg3"], self.lengths)
                 self.lg4 = self.leg(self.origins["Lg4"], self.lengths)
                 self.lg5 = self.leg(self.origins["Lg5"], self.lengths)
-
+                
+            def clr_plot(self):
+                # Clear the plot
+                ax.clear()
+                
+                # Disable Axis
+                ax.set_axis_off()
+                
+                # Regenerate standard structures
                 # Leg origin wire frame
                 x, y, z = [], [], []
 
@@ -132,15 +132,17 @@ class Matplotlib3DPlotApp(tk.Tk):
                 # Front indicator
                 ax.scatter(self.origins[origin][0], self.origins[origin][1], 0, color="red")
 
-            def plt_bot(self, angles, end_points):
+            def plt_bot(self, angles):
+                # Clear plot and generate all necessary standard structures
+                self.clr_plot()
                 
                 # Generate all x, y, z positions for each leg
-                self.lg0.plt_Leg(angles["Lg0"], end_points["Lg0"])
-                self.lg1.plt_Leg(angles["Lg1"], end_points["Lg1"])
-                self.lg2.plt_Leg(angles["Lg2"], end_points["Lg2"])
-                self.lg3.plt_Leg(angles["Lg3"], end_points["Lg3"])
-                self.lg4.plt_Leg(angles["Lg4"], end_points["Lg4"])
-                self.lg5.plt_Leg(angles["Lg5"], end_points["Lg5"])
+                self.lg0.plt_Leg(angles["Lg0"])
+                self.lg1.plt_Leg(angles["Lg1"])
+                self.lg2.plt_Leg(angles["Lg2"])
+                self.lg3.plt_Leg(angles["Lg3"])
+                self.lg4.plt_Leg(angles["Lg4"])
+                self.lg5.plt_Leg(angles["Lg5"])
 
             class leg():
 
@@ -148,12 +150,10 @@ class Matplotlib3DPlotApp(tk.Tk):
                     self.lg_origin = lg_origin
                     self.lengths = lengths
 
-                def calc_end_point(self, angles, end_point, accuracy=2):
+                def calc_end_point(self, angles, accuracy=2):
 
-                    theta0, theta1 = angles
-                    theta0, theta1 = radians(theta0), radians(theta1)
-
-                    x2_end, y2_end, z2_end = end_point
+                    theta0, theta1, theta2 = angles
+                    theta0, theta1, theta2 = radians(theta0), radians(theta1), radians(theta2)
 
                     xo, yo, zo = self.lg_origin
                     L0, L1, L2 = self.lengths
@@ -173,6 +173,10 @@ class Matplotlib3DPlotApp(tk.Tk):
                     limb1_x = [x0_end, x1_end]
                     limb1_y = [y0_end, y1_end]
                     limb1_z = [z0_end, z1_end]
+                    
+                    x2_end = round((x0_end + cos(theta0) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
+                    y2_end = round((yo + ((cos(theta2 + pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 + pi) * L2) * cos(theta1))), accuracy)
+                    z2_end = round((z0_end + sin(theta1) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
 
                     limb2_x = [x1_end, x2_end]
                     limb2_y = [y1_end, y2_end]
@@ -182,9 +186,9 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                     return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
 
-                def plt_Leg(self, angles, end_point):
+                def plt_Leg(self, angles):
                     
-                    limb0, limb1, limb2 = self.calc_end_point(angles, end_point)
+                    limb0, limb1, limb2 = self.calc_end_point(angles)
 
                     x0, y0, z0 = limb0
                     x1, y1, z1 = limb1
@@ -192,51 +196,17 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                     ax.plot(x0, y0, z0, color="green")
                     ax.plot(x1, y1, z1, color="red")
-                    ax.plot(x2, y2, z2, color="blue")'''
-        '''
-        angles = {"Lg0": (45, 45),
-                "Lg1": (90, 90),
-                "Lg2": (90, 90),
-                "Lg3": (90, 90),
-                "Lg4": (90, 90),
-                "Lg5": (90, 90)}
-
-        Hex = Hexapod((5, 5, 7))
-        Hex.plt_bot(angles, (8,0,8))
-        plt.ion()
-        plt.show()
-        plt.pause(2)
-        plt.cla()
-        Hex.plt_bot(angles, (20,0,8))
-        plt.show()
-        plt.pause(1)
-        plt.ioff()
-        plt.show()
-        '''
-
-        '''end_points = {"Lg0": (8,0,8),
-                  "Lg1": (8,0,8),
-                  "Lg2": (8,0,8),
-                  "Lg3": (8,0,8),
-                  "Lg4": (8,0,8),
-                  "Lg5": (8,0,8)}
+                    ax.plot(x2, y2, z2, color="blue")
         
         origins = {"Lg0": (5, 0, -5),
-           "Lg1": (0, 0, -7),
-           "Lg2": (-5, 0, -5),
-           "Lg3": (-5, 0, 5),
-           "Lg4": (0, 0, 7),
-           "Lg5": (5, 0, 5)}
-        
-        angles = {"Lg0": (-45, 45),
-          "Lg1": (-90, 45),
-          "Lg2": (-135, 45),
-          "Lg3": (-225, 45),
-          "Lg4": (-270, 45),
-          "Lg5": (-315, 45)}
-    
-        Hex = Hexapod(origins, (5, 5, 7))
-        Hex.plt_bot(angles, end_points)'''
+                   "Lg1": (0, 0, -7),
+                   "Lg2": (-5, 0, -5),
+                   "Lg3": (-5, 0, 5),
+                   "Lg4": (0, 0, 7),
+                   "Lg5": (5, 0, 5)}
+
+        Hex = Hexapod(origins, (27, 70, 120))
+        Hex.plt_bot(self.angles)
 
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
@@ -286,6 +256,9 @@ class angle_page(tk.Frame):
         self.angles = {key: [(angle + 360) if angle < 0 else angle for angle in value] for key, value in self.angles.items()}
         
         self.angles_theta = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
+
+        # Flag to indicate whether the function should execute the update logic
+        self.init_flag = True
 
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self)
@@ -353,31 +326,30 @@ class angle_page(tk.Frame):
             
             # Rectify main sliders with slider_storage
             self.sliders[leg] = slider_storage
+    
+        # Set the init_flag variable to False to make the change_angles function executable
+        self.init_flag = False
 
     def change_angles(self, value, leg, angle):
+        # Check if the function should execute the update logic
+        if self.init_flag:
+            return
+
         # Convert the value to an integer
         new_angle = int(float(value))
 
         # Update the label text with the new angle
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
-        # Update the angle in the angles dictionary
+        # Rectify the angle in the angles dictionary
         self.angles[leg][angle] = new_angle
 
-    def change_angles1(self, event):
-        # Rectify self.angles and all labels
-        for leg_labels, (leg, leg_sliders) in zip(self.labels.values(), self.sliders.items()):
+        # Rectify the plot
+        self.controller.update_Simulation()
 
-            # Iterates through all elements of a specific leg to find new values and rectify them
-            for index, (label, slider) in enumerate(zip(leg_labels.values(), leg_sliders.values())):
-                # Get angle from current slider
-                angle = int(slider.get())
+    def set_init_flag(self, value):
+        self.init_flag = value
 
-                # Set label text to new angle
-                label.config(text=f"Theta{index}: {angle}")
-
-                # Rectify angle in angles to new angle
-                self.angles[leg][index] = angle
 
 def main():
     app = Matplotlib3DPlotApp(angles = {
