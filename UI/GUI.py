@@ -205,14 +205,18 @@ class Matplotlib3DPlotApp(tk.Tk):
                    "Lg4": (0, 0, 7),
                    "Lg5": (5, 0, 5)}
 
-        Hex = Hexapod(origins, (27, 70, 120))
-        Hex.plt_bot(self.angles)
+        self.Hex = Hexapod(origins, (27, 70, 120))
+        self.Hex.plt_bot(self.angles)
+
+        plt.ion()
 
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.update_Simulation()
         
     def update_Simulation(self):
+        self.Hex.plt_bot(angles=self.angles)
         self.canvas.draw()
 
 class main_page(tk.Frame):
@@ -342,7 +346,7 @@ class angle_page(tk.Frame):
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
         # Rectify the angle in the angles dictionary
-        self.angles[leg][angle] = new_angle
+        self.controller.angles[leg][angle] = new_angle
 
         # Rectify the plot
         self.controller.update_Simulation()
