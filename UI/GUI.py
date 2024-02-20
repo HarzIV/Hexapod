@@ -118,7 +118,8 @@ class Matplotlib3DPlotApp(tk.Tk):
             def clr_plot(self):
                 # Clear the plot
                 ax.clear()
-                
+
+                # Regenerate everything that was falsely deleted
                 # Disable Axis
                 ax.set_axis_off()
                 
@@ -127,7 +128,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 ax.set_ylim(-self.y_lim, self.y_lim)
                 ax.set_zlim(-self.z_lim, self.z_lim) 
                 
-                # Regenerate standard structures
                 # Leg origin wire frame
                 x, y, z = [], [], []
 
