@@ -98,8 +98,16 @@ class Matplotlib3DPlotApp(tk.Tk):
             def __init__(self, origins, lengths):
                 self.lengths = lengths
                 self.origins = origins
+                
+                # Find x, y, z limits
+                leg_length = sum(self.lengths)
+                self.x_lim = leg_length+self.origins["Lg0"][0]
+                self.y_lim = leg_length
+                self.z_lim = leg_length+self.origins["Lg4"][2]
+                
+                print(self.x_lim, self.y_lim, self.z_lim)
 
-                # Initiate each leg
+                # Initialize each leg
                 self.lg0 = self.leg(self.origins["Lg0"], self.lengths)
                 self.lg1 = self.leg(self.origins["Lg1"], self.lengths)
                 self.lg2 = self.leg(self.origins["Lg2"], self.lengths)
@@ -113,6 +121,11 @@ class Matplotlib3DPlotApp(tk.Tk):
                 
                 # Disable Axis
                 ax.set_axis_off()
+                
+                # Set axis limit to prevent deformation of the plot when rectifying it
+                ax.set_xlim(-self.x_lim, self.x_lim)
+                ax.set_ylim(-self.y_lim, self.y_lim)
+                ax.set_zlim(-self.z_lim, self.z_lim) 
                 
                 # Regenerate standard structures
                 # Leg origin wire frame
