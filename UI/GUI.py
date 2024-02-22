@@ -121,7 +121,11 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                 # Regenerate everything that was falsely deleted
                 # Disable Axis
-                ax.set_axis_off()
+                # ax.set_axis_off()
+                
+                ax.set_xlabel('xlabel', fontsize=18)
+                ax.set_ylabel('ylabel', fontsize=16)
+                ax.set_zlabel('zlabel', fontsize=14)
                 
                 # Set axis limit to prevent deformation of the plot when rectifying it
                 ax.set_xlim(-self.x_lim, self.x_lim)
@@ -172,24 +176,24 @@ class Matplotlib3DPlotApp(tk.Tk):
                     L0, L1, L2 = self.lengths
 
                     x0_end = round((xo + cos(theta0) * L0), accuracy)
-                    y0_end = yo
-                    z0_end = round((zo + sin(theta0) * L0), accuracy)
+                    y0_end = round((yo + sin(theta0) * L0), accuracy)
+                    z0_end = zo
 
                     limb0_x = [xo, x0_end]
                     limb0_y = [yo, y0_end]
                     limb0_z = [zo, z0_end]
 
                     x1_end = round((x0_end + cos(theta0) * cos(theta1) * L1), accuracy)
-                    y1_end = round((yo + sin(theta1) * L1), accuracy)
-                    z1_end = round((z0_end + sin(theta0) * cos(theta1) * L1), accuracy)
+                    y1_end = round((y0_end + sin(theta0) * cos(theta1) * L1), accuracy)
+                    z1_end = round((zo + sin(theta1) * L1), accuracy)
 
                     limb1_x = [x0_end, x1_end]
                     limb1_y = [y0_end, y1_end]
                     limb1_z = [z0_end, z1_end]
                     
-                    x2_end = round((x0_end + cos(theta0) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
-                    y2_end = round((yo + ((cos(theta2 + pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 + pi) * L2) * cos(theta1))), accuracy)
-                    z2_end = round((z0_end + sin(theta1) * ((cos(theta2 + pi) * L2 + L1) * cos(theta1) - (sin(theta2 + pi) * L2) * sin(theta1))), accuracy)
+                    x2_end = round((x0_end + cos(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
+                    y2_end = round((y0_end + sin(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
+                    z2_end = round((zo + ((cos(theta2 - pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 - pi) * L2) * cos(theta1))), accuracy)
 
                     limb2_x = [x1_end, x2_end]
                     limb2_y = [y1_end, y2_end]
@@ -211,12 +215,12 @@ class Matplotlib3DPlotApp(tk.Tk):
                     ax.plot(x1, y1, z1, color="red")
                     ax.plot(x2, y2, z2, color="blue")
         
-        origins = {"Lg0": (5, 0, -5),
-                   "Lg1": (0, 0, -7),
-                   "Lg2": (-5, 0, -5),
-                   "Lg3": (-5, 0, 5),
-                   "Lg4": (0, 0, 7),
-                   "Lg5": (5, 0, 5)}
+        origins = {"Lg0": (5, -5, 0),
+                   "Lg1": (0, -7, 0),
+                   "Lg2": (-5, -5, 0),
+                   "Lg3": (-5, 5, 0),
+                   "Lg4": (0, 7, 0),
+                   "Lg5": (5, 5, 0)}
 
         self.Hex = Hexapod(origins, (27, 70, 120))
         self.Hex.plt_bot(self.angles)
@@ -370,9 +374,9 @@ class angle_page(tk.Frame):
 
 def main():
     app = Matplotlib3DPlotApp(angles = {
-    "Lg0": [-45, 45, 270],
-    "Lg1": [-90, 45, 270],
-    "Lg2": [-135, 45, 270],
+    "Lg0": [-45, 45, 90],
+    "Lg1": [-90, 45, 90],
+    "Lg2": [-135, 45, 90],
     "Lg3": [-225, 45, 90],
     "Lg4": [-270, 45, 90],
     "Lg5": [-315, 45, 90]})
