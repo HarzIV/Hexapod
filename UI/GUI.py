@@ -240,7 +240,7 @@ class main_page(tk.Frame):
         self.controller = controller
 
         # Dropdown menu variables
-        self.communication_options = ["A", "B", "C"]
+        self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
 
         # Frame for selecting all settings
         self.buttons_frame = ttk.Frame(self, style='warning')

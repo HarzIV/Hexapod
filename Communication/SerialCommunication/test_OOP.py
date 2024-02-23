@@ -64,7 +64,7 @@ chosen_port = int(input("Enter which device to send to: ").strip())
 port = com_ports[chosen_port - 1]
 
 
-Hexapod = Serial("COM4")
+Hexapod = Serial("COM10")
 
 while True:
     theta0 = int(input("Enter theta 0: ").strip())
