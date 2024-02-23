@@ -87,10 +87,10 @@ class Matplotlib3DPlotApp(tk.Tk):
         ax = fig.add_subplot(111, projection='3d')
 
         # Set initial camera angles
-        ax.view_init(elev=45, azim=90, roll=180)
+        ax.view_init(elev=45, azim=35, roll=0)
 
         # Disable the user from changing the camera angle
-        #ax.disable_mouse_rotation()
+        ax.disable_mouse_rotation()
 
         # Hexapod animation class
         class Hexapod():
@@ -104,8 +104,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.x_lim = leg_length+self.origins["Lg0"][0]
                 self.y_lim = leg_length
                 self.z_lim = leg_length+self.origins["Lg4"][2]
-                
-                print(self.x_lim, self.y_lim, self.z_lim)
 
                 # Initialize each leg
                 self.lg0 = self.leg(self.origins["Lg0"], self.lengths)
@@ -121,7 +119,7 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                 # Regenerate everything that was falsely deleted
                 # Disable Axis
-                # ax.set_axis_off()
+                ax.set_axis_off()
                 
                 ax.set_xlabel('xlabel', fontsize=18)
                 ax.set_ylabel('ylabel', fontsize=16)
@@ -147,7 +145,7 @@ class Matplotlib3DPlotApp(tk.Tk):
                 ax.plot(x, y, z)
 
                 # Front indicator
-                ax.scatter(self.origins[origin][0], self.origins[origin][1], 0, color="red")
+                ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
 
             def plt_bot(self, angles):
                 # Clear plot and generate all necessary standard structures
@@ -198,8 +196,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                     limb2_x = [x1_end, x2_end]
                     limb2_y = [y1_end, y2_end]
                     limb2_z = [z1_end, z2_end]
-
-                    #print((limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z))
 
                     return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
 
