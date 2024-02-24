@@ -1,7 +1,7 @@
 import serial
 import serial.tools.list_ports
 
-def Serial_devices():
+def Serial_devices_get():
     ports = serial.tools.list_ports.comports()
     
     if not ports:
@@ -28,7 +28,7 @@ class Serial():
 
         self.MicroController = serial.Serial(com_port, baud)
 
-    def Serial_send(self, Message):
+    def Serial_print(self, Message):
 
         MicroController = self.MicroController
 
@@ -54,7 +54,7 @@ class Serial():
         # Close the serial port
         MicroController.close()
 
-com_ports, descriptions = Serial_devices()
+'''com_ports, descriptions = Serial_devices_get()
 
 for i in descriptions:
     print(i)
@@ -77,4 +77,4 @@ while True:
 
     print(Message)
 
-    Hexapod.Serial_send(Message)
+    Hexapod.Serial_send(Message)'''
