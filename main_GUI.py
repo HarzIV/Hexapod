@@ -278,8 +278,6 @@ class main_page(tk.Frame):
         
         # Inialize Serial comunication
         self.controller.Hexapod_Serial = Serial(port)
-        
-        
 
 class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
@@ -388,7 +386,7 @@ class angle_page(tk.Frame):
         # Rectify the plot
         self.controller.update_Simulation()
 
-        Message = self.Hexapod_Serial.Generate_message((new_angle, new_angle, new_angle))
+        Message = self.Hexapod_Serial.Generate_message(leg, angle, new_angle)
 
         self.Hexapod_Serial.Serial_print(Message)
 
