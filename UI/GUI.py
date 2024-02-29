@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 class Matplotlib3DPlotApp(tk.Tk):
-    def __init__(self, angles, *args, **kwargs):
+    def __init__(self, offsets, angles, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         # Initialize root functions
@@ -19,6 +19,8 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         # Define variables
         self.angles = angles
+
+        self.offsets = offsets
 
         # Create a container to hold all the pages
         self.container = ttk.Frame(self)
@@ -268,11 +270,8 @@ class angle_page(tk.Frame):
 
         # Define variables
         self.angles = self.controller.angles
-
-        # Remove all negative sign from the angles for a nicer visualization
-        self.angles = {key: [(angle + 360) if angle < 0 else angle for angle in value] for key, value in self.angles.items()}
         
-        self.angles_theta = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
+        self.offsets = self.controller.offsets
 
         # Flag to indicate whether the function should execute the update logic
         self.init_flag = True
@@ -322,20 +321,28 @@ class angle_page(tk.Frame):
                 label_storage[label_name] = label
 
                 # Configure label
-                label.config(text=f"Theta{limb}: {angle}")
+                if not limb:
+                    label.config(text=f"Theta{limb}: {self.joint_angle(offset_angle=self.offsets[leg], input_angle=angle)}")
+                else:
+                    label.config(text=f"Theta{limb}: {angle}")
                 label.grid(pady=5)
 
                 # Generate slider name
                 slider_name = f"theta{limb}_slider"
 
                 # Generate slider
-                slider = ttk.Scale(Frame, bootstyle=color, from_=0, to=360, command=partial(self.change_angles, leg=leg, angle=limb), orient=tk.HORIZONTAL)
+                slider = ttk.Scale(Frame, bootstyle=color, from_=0, to=180, command=partial(self.change_angles, leg=leg, angle=limb), orient=tk.HORIZONTAL)
 
                 # Append new slider to temporary storage list
                 slider_storage[slider_name] = slider
 
                 # Configure slider
-                slider.set(self.angles[leg][limb])
+                # Check if the slider is for limb 0, if apply perspective rectification
+                if not limb:
+                    slider.set(self.joint_angle(offset_angle=self.offsets[leg], input_angle=angle))
+                else:
+                    slider.set(self.angles[leg][limb])
+
                 slider.grid(pady=5)
 
             # Rectify main label with label_storage
@@ -358,6 +365,9 @@ class angle_page(tk.Frame):
         # Update the label text with the new angle
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
+        # Take the offset for the current leg into consideration so the perspective of the angle matches the maths
+        new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
+
         # Rectify the angle in the angles dictionary
         self.controller.angles[leg][angle] = new_angle
 
@@ -366,16 +376,27 @@ class angle_page(tk.Frame):
 
     def set_init_flag(self, value):
         self.init_flag = value
+        
+    def main_angle(self, offset_angle, input_angle):
+        return offset_angle + input_angle - 90
+    
+    def joint_angle(self, offset_angle, input_angle):
+        return input_angle - offset_angle + 90
 
 
 def main():
-    app = Matplotlib3DPlotApp(angles = {
-    "Lg0": [-45, 45, 90],
-    "Lg1": [-90, 45, 90],
-    "Lg2": [-135, 45, 90],
-    "Lg3": [-225, 45, 90],
-    "Lg4": [-270, 45, 90],
-    "Lg5": [-315, 45, 90]})
+    app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
+                                         "Lg1": -90,
+                                         "Lg2": -135,
+                                         "Lg3": -225,
+                                         "Lg4": -270,
+                                         "Lg5": -315},
+                              angles = {"Lg0": [-45, 45, 90],
+                                        "Lg1": [-90, 45, 90],
+                                        "Lg2": [-135, 45, 90],
+                                        "Lg3": [-225, 45, 90],
+                                        "Lg4": [-270, 45, 90],
+                                        "Lg5": [-315, 45, 90]})
 
     app.mainloop()
 
