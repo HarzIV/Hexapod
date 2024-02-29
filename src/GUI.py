@@ -4,35 +4,38 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
 from functools import partial
 
+from test_OOP import *
+
 from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from Communication.SerialCommunication.test_OOP import *
-
 class Matplotlib3DPlotApp(tk.Tk):
-    def __init__(self, angles, *args, **kwargs):
+    def __init__(self, offsets, angles, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         # Initialize root functions
         self.title("Hexapod Control Center")
         self.style = Style(theme="vapor")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(0, 0)
 
         # Define variables
         self.angles = angles
+
+        self.offsets = offsets
 
         # Create a container to hold all the pages
         self.container = ttk.Frame(self)
         self.container.grid(row=1, column=0)
 
         # Frame for switching between pages
-        self.pages_frame = ttk.Frame(self, style="warning")
-        self.pages_frame.grid(row=0, column=0, columnspan=3, sticky='nw')
+        self.pages_frame = ttk.Frame(self, style="secondary")
+        self.pages_frame.grid(row=0, column=0, columnspan=4, sticky='nsew')
 
         # Frame for plot
         self.plot_frame = ttk.Frame(self)
-        self.plot_frame.grid(row=1, column=3)
+        self.plot_frame.grid(row=1, column=3, sticky='nsew')
 
         # Initialize simulation
         self.Simulation_init()
@@ -247,8 +250,8 @@ class main_page(tk.Frame):
         self.Serial_ports, self.Serial_devices = Serial_devices_get()
 
         # Frame for selecting all settings
-        self.buttons_frame = ttk.Frame(self, style='warning')
-        self.buttons_frame.grid(row=1, column=0, sticky='n', padx=(0, 10), pady=(0, 10))
+        self.communication_frame = ttk.Frame(self)
+        self.communication_frame.grid(row=1, column=0, sticky='nw')
         
         '''# Dropdown menu to set the communication method between the computer and the hexapod
         self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
@@ -257,7 +260,7 @@ class main_page(tk.Frame):
         self.communication.bind("<<ComboboxSelected>>", self.get_ports)'''
 
         # Dropdown menu to set the com port to use
-        self.devices = ttk.Combobox(self.buttons_frame, values=self.Serial_devices, state="readonly")
+        self.devices = ttk.Combobox(self.communication_frame, values=self.Serial_devices, state="readonly")
         self.devices.grid(padx=5, pady=5)
         self.devices.set("Select Device")
         self.devices.bind("<<ComboboxSelected>>", self.communication_init)
@@ -278,8 +281,6 @@ class main_page(tk.Frame):
         
         # Inialize Serial comunication
         self.controller.Hexapod_Serial = Serial(port)
-        
-        
 
 class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
@@ -287,16 +288,11 @@ class angle_page(tk.Frame):
         self.parent = parent
         self.style = style
         self.controller = controller
-        
-        self.Hexapod_Serial = Serial("COM10")
 
         # Define variables
         self.angles = self.controller.angles
-
-        # Remove all negative sign from the angles for a nicer visualization
-        self.angles = {key: [(angle + 360) if angle < 0 else angle for angle in value] for key, value in self.angles.items()}
         
-        self.angles_theta = 0 + self.angles["Lg0"][0], 0 + self.angles["Lg0"][1], 0 + self.angles["Lg0"][2]
+        self.offsets = self.controller.offsets
 
         # Flag to indicate whether the function should execute the update logic
         self.init_flag = True
@@ -304,6 +300,13 @@ class angle_page(tk.Frame):
         # Create frame for the sliders setting the angles
         self.angle_frame = ttk.Frame(self)
         self.angle_frame.grid(row=0, column=0, sticky='ne', padx=(0, 10), pady=(0, 10))
+
+        # Create frame for plot interaction buttons
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.grid(row=0, column=1, sticky="nw")
+        
+        self.reset = ttk.Button(self.button_frame, text="Reset", command=self.plot_reset)
+        self.reset.grid(sticky="nw")
 
         # Dictionary for frames for all labels and sliders
         self.Frames = {}
@@ -346,20 +349,28 @@ class angle_page(tk.Frame):
                 label_storage[label_name] = label
 
                 # Configure label
-                label.config(text=f"Theta{limb}: {angle}")
+                if not limb:
+                    label.config(text=f"Theta{limb}: {self.joint_angle(offset_angle=self.offsets[leg], input_angle=angle)}")
+                else:
+                    label.config(text=f"Theta{limb}: {angle}")
                 label.grid(pady=5)
 
                 # Generate slider name
                 slider_name = f"theta{limb}_slider"
 
                 # Generate slider
-                slider = ttk.Scale(Frame, bootstyle=color, from_=0, to=360, command=partial(self.change_angles, leg=leg, angle=limb), orient=tk.HORIZONTAL)
+                slider = ttk.Scale(Frame, bootstyle=color, from_=0, to=180, command=partial(self.change_angles, leg=leg, angle=limb), orient=tk.HORIZONTAL)
 
                 # Append new slider to temporary storage list
                 slider_storage[slider_name] = slider
 
                 # Configure slider
-                slider.set(self.angles_theta[limb])
+                # Check if the slider is for limb 0, if apply perspective rectification
+                if not limb:
+                    slider.set(self.joint_angle(offset_angle=self.offsets[leg], input_angle=angle))
+                else:
+                    slider.set(self.angles[leg][limb])
+
                 slider.grid(pady=5)
 
             # Rectify main label with label_storage
@@ -382,28 +393,68 @@ class angle_page(tk.Frame):
         # Update the label text with the new angle
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
+        # Take the offset for the current leg into consideration so the perspective of the angle matches the maths
+        new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
+
         # Rectify the angle in the angles dictionary
         self.controller.angles[leg][angle] = new_angle
 
         # Rectify the plot
         self.controller.update_Simulation()
+        
+    def plot_reset(self):
+        angles = {"Lg0": [90, 45, 90],
+                  "Lg1": [90, 45, 90],
+                  "Lg2": [90, 45, 90],
+                  "Lg3": [90, 45, 90],
+                  "Lg4": [90, 45, 90],
+                  "Lg5": [90, 45, 90]}
 
-        Message = self.Hexapod_Serial.Generate_message((new_angle, new_angle, new_angle))
+        real_angles = {"Lg0": [-45, 45, 90],
+                       "Lg1": [-90, 45, 90],
+                       "Lg2": [-135, 45, 90],
+                       "Lg3": [-225, 45, 90],
+                       "Lg4": [-270, 45, 90],
+                       "Lg5": [-315, 45, 90]}        
 
-        self.Hexapod_Serial.Serial_print(Message)
+        self.init_flag = True
+        
+        for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), angles.values()):
+            for angle_num, (label, slider, angle, real_angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, real_angles.values())):
+                label.config(text=f"Theta{angle_num}: {angle}")
+                
+                slider.set(angle)
+                
+        self.controller.angles = real_angles
+        
+        self.controller.update_Simulation()
+        
+        self.init_flag = False
+                
 
     def set_init_flag(self, value):
         self.init_flag = value
+        
+    def main_angle(self, offset_angle, input_angle):
+        return offset_angle + input_angle - 90
+    
+    def joint_angle(self, offset_angle, input_angle):
+        return input_angle - offset_angle + 90
 
 
 def main():
-    app = Matplotlib3DPlotApp(angles = {
-    "Lg0": [-45, 45, 90],
-    "Lg1": [-90, 45, 90],
-    "Lg2": [-135, 45, 90],
-    "Lg3": [-225, 45, 90],
-    "Lg4": [-270, 45, 90],
-    "Lg5": [-315, 45, 90]})
+    app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
+                                         "Lg1": -90,
+                                         "Lg2": -135,
+                                         "Lg3": -225,
+                                         "Lg4": -270,
+                                         "Lg5": -315},
+                              angles = {"Lg0": [-45, 45, 90],
+                                        "Lg1": [-90, 45, 90],
+                                        "Lg2": [-135, 45, 90],
+                                        "Lg3": [-225, 45, 90],
+                                        "Lg4": [-270, 45, 90],
+                                        "Lg5": [-315, 45, 90]})
 
     app.mainloop()
 

@@ -1,9 +1,9 @@
-from XboxController.ControllerInputs import get_joystick_pos, button_positions
-from Simulation.model import *
-from MathModule.InverseKinematics.math import *
-from MathModule.Controller_Input_Interpretation.ConI2 import output
-from Config.Config import *
-from Communication.SerialCommunication.test_OOP import *
+from src.ControllerInputs import get_joystick_pos, button_positions
+from src.model import *
+from src.math import *
+from src.ConI2 import output
+from src.Config import *
+from src.test_OOP import *
 
 # Initialize serial communication
 com_ports, descriptions = Serial_devices()

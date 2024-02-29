@@ -1,6 +1,6 @@
-from MathModule.Controller_Input_Interpretation.ConI2 import *
-from Config.Config import *
-from XboxController.ControllerInputs import *
+from src.ConI2 import *
+from src.Config import *
+from src.ControllerInputs import *
 from time import sleep
 
 get_joystick_pos(button_positions)

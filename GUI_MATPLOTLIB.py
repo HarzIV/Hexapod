@@ -1,7 +1,7 @@
 import tkinter as tk
-from Config.Config import *
-from Simulation.model import *
-from UI.GUI import Matplotlib3DPlotApp
+from src.Config import *
+from src.model import *
+from src.GUI import Matplotlib3DPlotApp
 
 new_angles = {"Lg0": (0,0,0),
               "Lg1": (0,0,0),
