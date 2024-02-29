@@ -16,6 +16,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.title("Hexapod Control Center")
         self.style = Style(theme="vapor")
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+        self.resizable(0, 0)
 
         # Define variables
         self.angles = angles
@@ -245,21 +246,37 @@ class main_page(tk.Frame):
         self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
 
         # Frame for selecting all settings
-        self.buttons_frame = ttk.Frame(self, style='warning')
-        self.buttons_frame.grid(row=1, column=0, sticky='n', padx=(0, 10), pady=(0, 10))
+        self.communication_frame = ttk.Frame(self)
+        self.communication_frame.grid(row=1, column=0, sticky='nw')
         
-        # Dropdown menu to set the communication method between the computer and the hexapod
+        '''# Dropdown menu to set the communication method between the computer and the hexapod
         self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
         self.communication.grid(padx=5, pady=5)
         self.communication.set("Communication Type")
-        self.communication.bind("<<ComboboxSelected>>", self.communication_init)
+        self.communication.bind("<<ComboboxSelected>>", self.get_ports)'''
+
+        # Dropdown menu to set the com port to use
+        self.devices = ttk.Combobox(self.buttons_frame, values=self.Serial_devices, state="readonly")
+        self.devices.grid(padx=5, pady=5)
+        self.devices.set("Select Device")
+        self.devices.bind("<<ComboboxSelected>>", self.communication_init)
 
         # Create a frame for the plot
         self.plot_frame = ttk.Frame(self)
         self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
-    
+
     def communication_init(self, event):
-        print(str(self.communication.get()))
+        # Get selected device
+        device = str(self.devices.get())
+        
+        # Find index of the device in the list of devices
+        index = self.Serial_devices.index(device)
+        
+        # Set port using the index of the selected device because both lists have the same len
+        port = self.Serial_ports[index]
+        
+        # Inialize Serial comunication
+        self.controller.Hexapod_Serial = Serial(port)
 
 class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
