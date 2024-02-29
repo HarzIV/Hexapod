@@ -13,7 +13,7 @@ num_joysticks = pygame.joystick.get_count()
 # Initialize all detected joysticks
 joysticks = [pygame.joystick.Joystick(i) for i in range(num_joysticks)]
 
-print(joysticks)
+#print(joysticks)
 
 # Dictionary to store all button and axis states
 button_positions = {"Button 0": 0,

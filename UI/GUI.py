@@ -335,7 +335,7 @@ class angle_page(tk.Frame):
                 slider_storage[slider_name] = slider
 
                 # Configure slider
-                slider.set(self.angles_theta[limb])
+                slider.set(self.angles[leg][limb])
                 slider.grid(pady=5)
 
             # Rectify main label with label_storage
