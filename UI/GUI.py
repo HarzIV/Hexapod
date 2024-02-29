@@ -27,12 +27,12 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.container.grid(row=1, column=0)
 
         # Frame for switching between pages
-        self.pages_frame = ttk.Frame(self, style="warning")
-        self.pages_frame.grid(row=0, column=0, columnspan=3, sticky='nw')
+        self.pages_frame = ttk.Frame(self, style="secondary")
+        self.pages_frame.grid(row=0, column=0, columnspan=4, sticky='nsew')
 
         # Frame for plot
         self.plot_frame = ttk.Frame(self)
-        self.plot_frame.grid(row=1, column=3)
+        self.plot_frame.grid(row=1, column=3, sticky='nsew')
 
         # Initialize simulation
         self.Simulation_init()
@@ -280,6 +280,13 @@ class angle_page(tk.Frame):
         self.angle_frame = ttk.Frame(self)
         self.angle_frame.grid(row=0, column=0, sticky='ne', padx=(0, 10), pady=(0, 10))
 
+        # Create frame for plot interaction buttons
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.grid(row=0, column=1, sticky="nw")
+        
+        self.reset = ttk.Button(self.button_frame, text="Reset", command=self.plot_reset)
+        self.reset.grid(sticky="nw")
+
         # Dictionary for frames for all labels and sliders
         self.Frames = {}
 
@@ -373,6 +380,36 @@ class angle_page(tk.Frame):
 
         # Rectify the plot
         self.controller.update_Simulation()
+        
+    def plot_reset(self):
+        angles = {"Lg0": [90, 45, 90],
+                  "Lg1": [90, 45, 90],
+                  "Lg2": [90, 45, 90],
+                  "Lg3": [90, 45, 90],
+                  "Lg4": [90, 45, 90],
+                  "Lg5": [90, 45, 90]}
+
+        real_angles = {"Lg0": [-45, 45, 90],
+                       "Lg1": [-90, 45, 90],
+                       "Lg2": [-135, 45, 90],
+                       "Lg3": [-225, 45, 90],
+                       "Lg4": [-270, 45, 90],
+                       "Lg5": [-315, 45, 90]}        
+
+        self.init_flag = True
+        
+        for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), angles.values()):
+            for angle_num, (label, slider, angle, real_angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, real_angles.values())):
+                label.config(text=f"Theta{angle_num}: {angle}")
+                
+                slider.set(angle)
+                
+        self.controller.angles = real_angles
+        
+        self.controller.update_Simulation()
+        
+        self.init_flag = False
+                
 
     def set_init_flag(self, value):
         self.init_flag = value
