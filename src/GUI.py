@@ -24,6 +24,8 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.angles = angles
 
         self.offsets = offsets
+        
+        self.communication = False
 
         # Create a container to hold all the pages
         self.container = ttk.Frame(self)
@@ -79,9 +81,27 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Show the page with the given page name
         page = self.pages[page_name]
         page.tkraise()
-    
+        
+    def communication_type(self, event):
+        # Get selected communication type
+        type = str(event.get())
+
     def communication_init(self, event):
-        print(str(self.communication.get()))
+        # Check if there is on going communication and stop if
+        if self.controller.communication:
+            pass
+
+        # Get selected device
+        device = str(self.devices.get())
+        
+        # Find index of the device in the list of devices
+        index = self.Serial_devices.index(device)
+        
+        # Set port using the index of the selected device because both lists have the same len
+        port = self.Serial_ports[index]
+        
+        # Inialize Serial comunication
+        self.controller.Hexapod_Serial = Serial(port)
         
     def Simulation_init(self):
         # Initialize Dark-Mode
@@ -263,24 +283,11 @@ class main_page(tk.Frame):
         self.devices = ttk.Combobox(self.communication_frame, values=self.Serial_devices, state="readonly")
         self.devices.grid(padx=5, pady=5)
         self.devices.set("Select Device")
-        self.devices.bind("<<ComboboxSelected>>", self.communication_init)
+        self.devices.bind("<<ComboboxSelected>>", self.controller.communication_init)
 
         # Create a frame for the plot
         self.plot_frame = ttk.Frame(self)
         self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
-
-    def communication_init(self, event):
-        # Get selected device
-        device = str(self.devices.get())
-        
-        # Find index of the device in the list of devices
-        index = self.Serial_devices.index(device)
-        
-        # Set port using the index of the selected device because both lists have the same len
-        port = self.Serial_ports[index]
-        
-        # Inialize Serial comunication
-        self.controller.Hexapod_Serial = Serial(port)
 
 class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
