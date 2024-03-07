@@ -25,7 +25,7 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         self.offsets = offsets
         
-        self.communication = False
+        self.communication_activity = False
 
         # Create a container to hold all the pages
         self.container = ttk.Frame(self)
@@ -85,23 +85,6 @@ class Matplotlib3DPlotApp(tk.Tk):
     def communication_type(self, event):
         # Get selected communication type
         type = str(event.get())
-
-    def communication_init(self, event):
-        # Check if there is on going communication and stop if
-        if self.controller.communication:
-            pass
-
-        # Get selected device
-        device = str(self.devices.get())
-        
-        # Find index of the device in the list of devices
-        index = self.Serial_devices.index(device)
-        
-        # Set port using the index of the selected device because both lists have the same len
-        port = self.Serial_ports[index]
-        
-        # Inialize Serial comunication
-        self.controller.Hexapod_Serial = Serial(port)
         
     def Simulation_init(self):
         # Initialize Dark-Mode
@@ -273,21 +256,47 @@ class main_page(tk.Frame):
         self.communication_frame = ttk.Frame(self)
         self.communication_frame.grid(row=1, column=0, sticky='nw')
         
-        '''# Dropdown menu to set the communication method between the computer and the hexapod
-        self.communication = ttk.Combobox(self.buttons_frame, values=self.communication_options, state="readonly")
+        # Dropdown menu to set the communication method between the computer and the hexapod
+        self.communication = ttk.Combobox(self.communication_frame, values=self.communication_options, state="readonly")
         self.communication.grid(padx=5, pady=5)
         self.communication.set("Communication Type")
-        self.communication.bind("<<ComboboxSelected>>", self.get_ports)'''
+        self.communication.bind("<<ComboboxSelected>>", self.communication_type)
 
         # Dropdown menu to set the com port to use
         self.devices = ttk.Combobox(self.communication_frame, values=self.Serial_devices, state="readonly")
         self.devices.grid(padx=5, pady=5)
         self.devices.set("Select Device")
-        self.devices.bind("<<ComboboxSelected>>", self.controller.communication_init)
+        self.devices.bind("<<ComboboxSelected>>", self.communication_init)
+        self.devices.config(state=tk.DISABLED)
 
         # Create a frame for the plot
         self.plot_frame = ttk.Frame(self)
         self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
+    
+    def communication_type(self, event):
+        # Enable devices
+        self.devices.config(state="readonly")
+        
+        # Set communication to active
+        self.controller.communication_activity = True
+    
+    def communication_init(self, event):
+        # Check if there is on going communication and stop if
+        if not self.controller.communication_activity:
+            return
+
+        # Get selected device
+        device = str(self.devices.get())
+        print(self.Serial_devices, self.Serial_ports)
+        
+        # Find index of the device in the list of devices
+        index = self.Serial_devices.index(device)
+        
+        # Set port using the index of the selected device because both lists have the same len
+        port = self.Serial_ports[index]
+        
+        # Inialize Serial comunication
+        self.controller.Hexapod_Serial = Serial(port)
 
 class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
@@ -298,7 +307,7 @@ class angle_page(tk.Frame):
 
         # Define variables
         self.angles = self.controller.angles
-        
+
         self.offsets = self.controller.offsets
 
         # Flag to indicate whether the function should execute the update logic
