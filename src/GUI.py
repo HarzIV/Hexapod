@@ -297,6 +297,8 @@ class main_page(tk.Frame):
         
         # Set port using the index of the selected device because both lists have the same len
         port = self.Serial_ports[index]
+
+        print(device, port)
         
         # Inialize Serial comunication
         self.controller.Hexapod_Serial = Serial(port)
@@ -436,6 +438,18 @@ class angle_page(tk.Frame):
                   "Lg3": [90, 45, 90],
                   "Lg4": [90, 45, 90],
                   "Lg5": [90, 45, 90]}
+        
+        message = ""
+        
+        for name_tags, standard_angles in zip(tags.values(), angles.values()):
+            for tag, standard_angle in zip(name_tags.values(), standard_angles):
+                message = message + tag + str(standard_angle)
+                
+        message = message + "X\n"
+        
+        print(message)
+        
+        self.controller.Hexapod_Serial.Serial_print(message)
 
         real_angles = {"Lg0": [-45, 45, 90],
                        "Lg1": [-90, 45, 90],
