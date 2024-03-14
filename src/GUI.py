@@ -26,6 +26,9 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.offsets = offsets
         
         self.communication_activity = False
+        
+        # Variable to store initialized serial port in
+        self.Hexapod_Serial = None
 
         # Create a container to hold all the pages
         self.container = ttk.Frame(self)
@@ -81,11 +84,11 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Show the page with the given page name
         page = self.pages[page_name]
         page.tkraise()
-        
+
     def communication_type(self, event):
         # Get selected communication type
         type = str(event.get())
-        
+
     def Simulation_init(self):
         # Initialize Dark-Mode
         plt.style.use('dark_background')
@@ -417,6 +420,14 @@ class angle_page(tk.Frame):
 
         # Rectify the plot
         self.controller.update_Simulation()
+        
+        # Gnerate serial message
+        message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
+
+        print(message)
+        
+        # Send changed anles through serial port
+        self.controller.Hexapod_Serial.Serial_print(message)
         
     def plot_reset(self):
         angles = {"Lg0": [90, 45, 90],

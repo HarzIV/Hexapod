@@ -1,6 +1,13 @@
 import serial
 import serial.tools.list_ports
 
+tags = {"Lg0": {"0": "A", "1": "B", "2": "C",},
+        "Lg1": {"0": "D", "1": "E", "2": "F",},
+        "Lg2": {"0": "G", "1": "H", "2": "I",},
+        "Lg3": {"0": "J", "1": "K", "2": "L",},
+        "Lg4": {"0": "M", "1": "N", "2": "O",},
+        "Lg5": {"0": "P", "1": "Q", "2": "R",}}
+
 def Serial_devices_get():
     ports = serial.tools.list_ports.comports()
     
@@ -41,9 +48,12 @@ class Serial():
 
             return e
         
-    def Generate_message(self, angles):
+    def Generate_message(self, leg, angle, value):
+        # Find tag
+        tag = tags[leg][str(angle)]
 
-        Message = f"{(angles[0])}A{angles[1]}B{angles[2]}\n"
+        # Generate message
+        Message = f"{tag}{int(float(value))}X\n"
 
         return Message
 
