@@ -130,7 +130,7 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                 # Regenerate everything that was falsely deleted
                 # Disable Axis
-                ax.set_axis_off()
+                # ax.set_axis_off()
                 
                 ax.set_xlabel('xlabel', fontsize=18)
                 ax.set_ylabel('ylabel', fontsize=16)
@@ -176,6 +176,11 @@ class Matplotlib3DPlotApp(tk.Tk):
                     self.lg_origin = lg_origin
                     self.lengths = lengths
 
+                    # Define Plot for each limb
+                    self.coxa, = ax.plot([], [], [], color="green")
+                    self.femur, = ax.plot([], [], [], color="red")
+                    self.tibia, = ax.plot([], [], [], color="blue")
+
                 def calc_end_point(self, angles, accuracy=2):
 
                     theta0, theta1, theta2 = angles
@@ -210,6 +215,15 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                     return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
 
+                def update(self, limb, x, y, z):
+                    limb.set_data(x, y)
+                    limb.set_3d_properties(z)
+                
+                def clear_Leg(self):
+                    self.coxa.remove()
+                    self.femur.remove()
+                    self.tibia.remove()
+
                 def plt_Leg(self, angles):
                     
                     limb0, limb1, limb2 = self.calc_end_point(angles)
@@ -217,10 +231,16 @@ class Matplotlib3DPlotApp(tk.Tk):
                     x0, y0, z0 = limb0
                     x1, y1, z1 = limb1
                     x2, y2, z2 = limb2
+                    
+                    print(self.coxa)
 
-                    ax.plot(x0, y0, z0, color="green")
-                    ax.plot(x1, y1, z1, color="red")
-                    ax.plot(x2, y2, z2, color="blue")
+                    self.update(self.coxa, x0, y0, z0)
+                    self.update(self.femur, x1, y1, z1)
+                    self.update(self.tibia, x2, y2, z2)
+                    
+                    print("_________")
+                    
+                    print(self.coxa)
         
         origins = {"Lg0": (5, -5, 0),
                    "Lg1": (0, -7, 0),
