@@ -22,6 +22,21 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         # Define variables
         self.angles = angles
+        
+        self.new_angles = {}
+
+        for key, value in angles.items():
+            angles = []
+            for item in value:
+                angles.append(item+0)
+            self.new_angles[key] = angles
+        
+        self.test_angles = {"Lg0": [-45, 45, 90],
+                                        "Lg1": [-90, 45, 90],
+                                        "Lg2": [-135, 45, 90],
+                                        "Lg3": [-225, 45, 90],
+                                        "Lg4": [-270, 45, 90],
+                                        "Lg5": [-315, 45, 90]}
 
         self.offsets = offsets
         
@@ -106,155 +121,6 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         # Disable the user from changing the camera angle
         # ax.disable_mouse_rotation()
-
-        '''# Hexapod animation class
-        class Hexapod():
-
-            def __init__(self, origins, lengths):
-                self.lengths = lengths
-                self.origins = origins
-                
-                # Find x, y, z limits
-                leg_length = sum(self.lengths)
-                self.x_lim = leg_length+self.origins["Lg0"][0]
-                self.y_lim = leg_length
-                self.z_lim = leg_length+self.origins["Lg4"][2]
-
-                # Initialize each leg
-                self.lg0 = self.leg(self.origins["Lg0"], self.lengths)
-                self.lg1 = self.leg(self.origins["Lg1"], self.lengths)
-                self.lg2 = self.leg(self.origins["Lg2"], self.lengths)
-                self.lg3 = self.leg(self.origins["Lg3"], self.lengths)
-                self.lg4 = self.leg(self.origins["Lg4"], self.lengths)
-                self.lg5 = self.leg(self.origins["Lg5"], self.lengths)
-                
-            def clr_plot(self):
-                # Clear the plot
-                ax.clear()
-
-                # Regenerate everything that was falsely deleted
-                # Disable Axis
-                # ax.set_axis_off()
-                
-                ax.set_xlabel('xlabel', fontsize=18)
-                ax.set_ylabel('ylabel', fontsize=16)
-                ax.set_zlabel('zlabel', fontsize=14)
-                
-                # Set axis limit to prevent deformation of the plot when rectifying it
-                ax.set_xlim(-self.x_lim, self.x_lim)
-                ax.set_ylim(-self.y_lim, self.y_lim)
-                ax.set_zlim(-self.z_lim, self.z_lim) 
-                
-                # Leg origin wire frame
-                x, y, z = [], [], []
-
-                for origin in self.origins:
-                    x.append(self.origins[origin][0])
-                    y.append(self.origins[origin][1])
-                    z.append(self.origins[origin][2])
-                
-                x.append(self.origins["Lg0"][0])
-                y.append(self.origins["Lg0"][1])
-                z.append(self.origins["Lg0"][2])
-
-                ax.plot(x, y, z)
-
-                # Front indicator
-                ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
-
-            def plt_bot(self, angles):
-                # Clear plot and generate all necessary standard structures
-                self.clr_plot()
-                
-                # Generate all x, y, z positions for each leg
-                self.lg0.plt_Leg(angles["Lg0"])
-                self.lg1.plt_Leg(angles["Lg1"])
-                self.lg2.plt_Leg(angles["Lg2"])
-                self.lg3.plt_Leg(angles["Lg3"])
-                self.lg4.plt_Leg(angles["Lg4"])
-                self.lg5.plt_Leg(angles["Lg5"])
-
-            class leg():
-
-                def __init__(self, lg_origin, lengths):
-                    self.lg_origin = lg_origin
-                    self.lengths = lengths
-
-                    # Define Plot for each limb
-                    self.coxa, = ax.plot([], [], [], color="green")
-                    self.femur, = ax.plot([], [], [], color="red")
-                    self.tibia, = ax.plot([], [], [], color="blue")
-
-                def calc_end_point(self, angles, accuracy=2):
-
-                    theta0, theta1, theta2 = angles
-                    theta0, theta1, theta2 = radians(theta0), radians(theta1), radians(theta2)
-
-                    xo, yo, zo = self.lg_origin
-                    L0, L1, L2 = self.lengths
-
-                    x0_end = round((xo + cos(theta0) * L0), accuracy)
-                    y0_end = round((yo + sin(theta0) * L0), accuracy)
-                    z0_end = zo
-
-                    limb0_x = [xo, x0_end]
-                    limb0_y = [yo, y0_end]
-                    limb0_z = [zo, z0_end]
-
-                    x1_end = round((x0_end + cos(theta0) * cos(theta1) * L1), accuracy)
-                    y1_end = round((y0_end + sin(theta0) * cos(theta1) * L1), accuracy)
-                    z1_end = round((zo + sin(theta1) * L1), accuracy)
-
-                    limb1_x = [x0_end, x1_end]
-                    limb1_y = [y0_end, y1_end]
-                    limb1_z = [z0_end, z1_end]
-                    
-                    x2_end = round((x0_end + cos(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
-                    y2_end = round((y0_end + sin(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
-                    z2_end = round((zo + ((cos(theta2 - pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 - pi) * L2) * cos(theta1))), accuracy)
-
-                    limb2_x = [x1_end, x2_end]
-                    limb2_y = [y1_end, y2_end]
-                    limb2_z = [z1_end, z2_end]
-
-                    return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
-
-                def update(self, limb, x, y, z):
-                    limb.set_data(x, y)
-                    limb.set_3d_properties(z)
-                
-                def clear_Leg(self):
-                    self.coxa.remove()
-                    self.femur.remove()
-                    self.tibia.remove()
-
-                def plt_Leg(self, angles):
-                    
-                    limb0, limb1, limb2 = self.calc_end_point(angles)
-
-                    x0, y0, z0 = limb0
-                    x1, y1, z1 = limb1
-                    x2, y2, z2 = limb2
-                    
-                    print(self.coxa)
-
-                    self.update(self.coxa, x0, y0, z0)
-                    self.update(self.femur, x1, y1, z1)
-                    self.update(self.tibia, x2, y2, z2)
-                    
-                    print("_________")
-                    
-                    print(self.coxa)'''
-        
-        '''origins = {"Lg0": (5, -5, 0),
-                   "Lg1": (0, -7, 0),
-                   "Lg2": (-5, -5, 0),
-                   "Lg3": (-5, 5, 0),
-                   "Lg4": (0, 7, 0),
-                   "Lg5": (5, 5, 0)}
-
-        self.Hex = Hexapod(origins, (27, 70, 120))
-        self.Hex.plt_bot(self.angles)'''
         
         class leg():
 
@@ -333,26 +199,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.x_lim = leg_length+self.origins["Lg0"][0]
                 self.y_lim = leg_length
                 self.z_lim = leg_length+self.origins["Lg4"][2]
-
-                # Initialize each leg
-                self.lg0 = leg(self.origins["Lg0"], self.lengths)
-                self.lg1 = leg(self.origins["Lg1"], self.lengths)
-                self.lg2 = leg(self.origins["Lg2"], self.lengths)
-                self.lg3 = leg(self.origins["Lg3"], self.lengths)
-                self.lg4 = leg(self.origins["Lg4"], self.lengths)
-                self.lg5 = leg(self.origins["Lg5"], self.lengths)
-            
-            def clr_plot(self):
-                # Clear the plot
-                ax.clear()
-
-                # Regenerate everything that was falsely deleted
-                # Disable Axis
-                # ax.set_axis_off()
-                
-                ax.set_xlabel('xlabel', fontsize=18)
-                ax.set_ylabel('ylabel', fontsize=16)
-                ax.set_zlabel('zlabel', fontsize=14)
                 
                 # Set axis limit to prevent deformation of the plot when rectifying it
                 ax.set_xlim(-self.x_lim, self.x_lim)
@@ -375,6 +221,26 @@ class Matplotlib3DPlotApp(tk.Tk):
 
                 # Front indicator
                 ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
+
+                # Initialize each leg
+                self.lg0 = leg(self.origins["Lg0"], self.lengths)
+                self.lg1 = leg(self.origins["Lg1"], self.lengths)
+                self.lg2 = leg(self.origins["Lg2"], self.lengths)
+                self.lg3 = leg(self.origins["Lg3"], self.lengths)
+                self.lg4 = leg(self.origins["Lg4"], self.lengths)
+                self.lg5 = leg(self.origins["Lg5"], self.lengths)
+            
+            def clr_plot(self):
+                # Clear the plot
+                ax.clear()
+
+                # Regenerate everything that was falsely deleted
+                # Disable Axis
+                # ax.set_axis_off()
+                
+                ax.set_xlabel('xlabel', fontsize=18)
+                ax.set_ylabel('ylabel', fontsize=16)
+                ax.set_zlabel('zlabel', fontsize=14)
 
             def plt_bot(self, angles):
                 # Clear plot and generate all necessary standard structures
@@ -407,6 +273,27 @@ class Matplotlib3DPlotApp(tk.Tk):
         
     def update_Simulation(self):
         self.Hex.plt_bot(angles=self.angles)
+        
+        is_changed = False
+        changed_legs = []
+
+        for old_angles, (leg, new_angles) in zip(self.angles.values(), self.new_angles.items()):
+            # Loop over items inside both values
+            for old_angle, new_angle in zip(old_angles, new_angles):
+                # Check if angle has been changed
+                if not old_angle == new_angle:
+                    is_changed = True
+            
+            # Check if any of the angles for the current leg have been changed
+            if is_changed:
+                # Append the changed legs id
+                changed_legs.append(leg)
+                
+                # Rectify is_changed to be False
+                is_changed = False
+        
+        print(changed_legs)
+        
         # self.Leg.plt_Leg(angles=(45,45,90))
         self.canvas.draw()
 
@@ -585,7 +472,11 @@ class angle_page(tk.Frame):
         new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
 
         # Rectify the angle in the angles dictionary
-        self.controller.angles[leg][angle] = new_angle
+        self.controller.new_angles[leg][angle] = new_angle
+        
+        # print(self.controller.new_angles)
+        # print(self.controller.angles)
+        # print(self.controller.test_angles)
 
         # Rectify the plot
         self.controller.update_Simulation()
@@ -616,24 +507,17 @@ class angle_page(tk.Frame):
 
         print(message)
 
-        self.controller.Hexapod_Serial.Serial_print(message)
-
-        real_angles = {"Lg0": [-45, 45, 90],
-                       "Lg1": [-90, 45, 90],
-                       "Lg2": [-135, 45, 90],
-                       "Lg3": [-225, 45, 90],
-                       "Lg4": [-270, 45, 90],
-                       "Lg5": [-315, 45, 90]}        
+        self.controller.Hexapod_Serial.Serial_print(message)      
 
         self.init_flag = True
 
         for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), angles.values()):
-            for angle_num, (label, slider, angle, real_angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, real_angles.values())):
+            for angle_num, (label, slider, angle, self.angles) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, real_angles.values())):
                 label.config(text=f"Theta{angle_num}: {angle}")
 
                 slider.set(angle)
 
-        self.controller.angles = real_angles
+        self.controller.new_angles = self.angles
 
         self.controller.update_Simulation()
 
