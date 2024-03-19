@@ -21,22 +21,20 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.resizable(0, 0)
 
         # Define variables
-        self.angles = angles
+        self.start_angles = angles
+
+        # Create empty dictionary's
+        self.old_angles = {}
         
+        self.create_copy(angles, self.old_angles)
+
         self.new_angles = {}
 
-        for key, value in angles.items():
-            angles = []
-            for item in value:
-                angles.append(item+0)
-            self.new_angles[key] = angles
-        
-        self.test_angles = {"Lg0": [-45, 45, 90],
-                                        "Lg1": [-90, 45, 90],
-                                        "Lg2": [-135, 45, 90],
-                                        "Lg3": [-225, 45, 90],
-                                        "Lg4": [-270, 45, 90],
-                                        "Lg5": [-315, 45, 90]}
+        # This copy's the contents of the angles dictionary, this is done because things like
+        # Creating a shallow copy through the .copy() method, setting this dictionary equal to angles
+        # for some reason seems to interlink self.start_angles and self.new_angles such that a rectification
+        # made to self.new_angles also rectifys self.start_angles in the exact same way
+        self.create_copy(angles, self.new_angles)
 
         self.offsets = offsets
         
@@ -99,10 +97,13 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Show the page with the given page name
         page = self.pages[page_name]
         page.tkraise()
-
-    def communication_type(self, event):
-        # Get selected communication type
-        type = str(event.get())
+    
+    def create_copy(self, dict, copy):
+        for key, value in dict.items():
+            extracted_angles = []
+            for item in value:
+                extracted_angles.append(item+0)
+            copy[key] = extracted_angles
 
     def Simulation_init(self):
         # Initialize Dark-Mode
@@ -114,10 +115,6 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         # Set initial camera angles
         ax.view_init(elev=45, azim=35, roll=0)
-        
-        ax.set_xlim(-50, 50)
-        ax.set_ylim(-50, 50)
-        ax.set_zlim(-50, 50)
 
         # Disable the user from changing the camera angle
         # ax.disable_mouse_rotation()
@@ -271,13 +268,12 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         self.update_Simulation()
         
-    def update_Simulation(self):
-        self.Hex.plt_bot(angles=self.angles)
-        
+    def update_Simulation(self):        
         is_changed = False
         changed_legs = []
 
-        for old_angles, (leg, new_angles) in zip(self.angles.values(), self.new_angles.items()):
+        # Finds out which legs have been altered
+        for old_angles, (leg, new_angles) in zip(self.old_angles.values(), self.new_angles.items()):
             # Loop over items inside both values
             for old_angle, new_angle in zip(old_angles, new_angles):
                 # Check if angle has been changed
@@ -291,10 +287,15 @@ class Matplotlib3DPlotApp(tk.Tk):
                 
                 # Rectify is_changed to be False
                 is_changed = False
+
+        # Set old_angles equal to new_angels to be able to compare the new angles,
+        # to the old angles the next time
+        # self.old_angles = self.new_angles
+        self.create_copy(self.new_angles, self.old_angles)
+
+        self.Hex.plt_bot(angles=self.new_angles)
         
-        print(changed_legs)
-        
-        # self.Leg.plt_Leg(angles=(45,45,90))
+        # Update the canvas
         self.canvas.draw()
 
 class main_page(tk.Frame):
@@ -365,7 +366,7 @@ class angle_page(tk.Frame):
         self.controller = controller
 
         # Define variables
-        self.angles = self.controller.angles
+        self.start_angles = self.controller.start_angles
 
         self.offsets = self.controller.offsets
 
@@ -408,7 +409,7 @@ class angle_page(tk.Frame):
                 Frame.grid(row=leg, column=leg_side, padx=5, pady=5)
 
         # Generates all individual sliders and labels for changing all angels individually
-        for (leg, angles), Frame in zip(self.angles.items(), self.Frames.values()):
+        for (leg, angles), Frame in zip(self.start_angles.items(), self.Frames.values()):
             # Generate empty dictionaries to store labels and slider
             label_storage = {}
             slider_storage = {}
@@ -444,7 +445,7 @@ class angle_page(tk.Frame):
                 if not limb:
                     slider.set(self.joint_angle(offset_angle=self.offsets[leg], input_angle=angle))
                 else:
-                    slider.set(self.angles[leg][limb])
+                    slider.set(self.start_angles[leg][limb])
 
                 slider.grid(pady=5)
 
@@ -512,20 +513,21 @@ class angle_page(tk.Frame):
         self.init_flag = True
 
         for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), angles.values()):
-            for angle_num, (label, slider, angle, self.angles) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, real_angles.values())):
+            for angle_num, (label, slider, angle, real_angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, self.start_angles.values())):
                 label.config(text=f"Theta{angle_num}: {angle}")
 
                 slider.set(angle)
 
-        self.controller.new_angles = self.angles
+        # Copy new_angles into old_angles
+        self.controller.create_copy(self.controller.new_angles, self.controller.old_angles)
 
+        # opy start_angles into new_angles
+        self.controller.create_copy(self.start_angles, self.controller.new_angles)
+
+        # Update the simulation
         self.controller.update_Simulation()
 
         self.init_flag = False
-                
-
-    def set_init_flag(self, value):
-        self.init_flag = value
         
     def main_angle(self, offset_angle, input_angle):
         return offset_angle + input_angle - 90
