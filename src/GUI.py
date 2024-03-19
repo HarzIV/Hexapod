@@ -187,9 +187,10 @@ class Matplotlib3DPlotApp(tk.Tk):
         
         class Hexapod():
 
-            def __init__(self, origins, lengths):
+            def __init__(self, origins, lengths, start_angels):
                 self.lengths = lengths
                 self.origins = origins
+                self.legs = {}
                 
                 # Find x, y, z limits
                 leg_length = sum(self.lengths)
@@ -219,13 +220,10 @@ class Matplotlib3DPlotApp(tk.Tk):
                 # Front indicator
                 ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
 
-                # Initialize each leg
-                self.lg0 = leg(self.origins["Lg0"], self.lengths)
-                self.lg1 = leg(self.origins["Lg1"], self.lengths)
-                self.lg2 = leg(self.origins["Lg2"], self.lengths)
-                self.lg3 = leg(self.origins["Lg3"], self.lengths)
-                self.lg4 = leg(self.origins["Lg4"], self.lengths)
-                self.lg5 = leg(self.origins["Lg5"], self.lengths)
+                # Initialize each leg and set plot its start position
+                for key in origins.keys():
+                    self.legs[key] = leg(origins[key], self.lengths)
+                    self.legs[key].plt_Leg(start_angels[key])
             
             def clr_plot(self):
                 # Clear the plot
@@ -239,17 +237,13 @@ class Matplotlib3DPlotApp(tk.Tk):
                 ax.set_ylabel('ylabel', fontsize=16)
                 ax.set_zlabel('zlabel', fontsize=14)
 
-            def plt_bot(self, angles):
+            def plt_bot(self, angles, changed_legs):
                 # Clear plot and generate all necessary standard structures
                 # self.clr_plot()
-                
-                # Generate all x, y, z positions for each leg
-                self.lg0.plt_Leg(angles["Lg0"])
-                self.lg1.plt_Leg(angles["Lg1"])
-                self.lg2.plt_Leg(angles["Lg2"])
-                self.lg3.plt_Leg(angles["Lg3"])
-                self.lg4.plt_Leg(angles["Lg4"])
-                self.lg5.plt_Leg(angles["Lg5"])
+
+                # Update leg plot
+                for changed_leg in changed_legs:
+                    self.legs[changed_leg].plt_Leg(angles[changed_leg])
 
         origins = {"Lg0": (5, -5, 0),
                    "Lg1": (0, -7, 0),
@@ -259,7 +253,7 @@ class Matplotlib3DPlotApp(tk.Tk):
                    "Lg5": (5, 5, 0)}
                 
         # self.Leg = leg(lg_origin=(0,0,0), lengths=(10, 20, 30))
-        self.Hex = Hexapod(origins, (27, 70, 120))
+        self.Hex = Hexapod(origins, (27, 70, 120), self.start_angles)
         
         plt.ion()
 
@@ -293,7 +287,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         # self.old_angles = self.new_angles
         self.create_copy(self.new_angles, self.old_angles)
 
-        self.Hex.plt_bot(angles=self.new_angles)
+        self.Hex.plt_bot(angles=self.new_angles, changed_legs=changed_legs)
         
         # Update the canvas
         self.canvas.draw()
@@ -367,6 +361,19 @@ class angle_page(tk.Frame):
 
         # Define variables
         self.start_angles = self.controller.start_angles
+        
+        self.joint_angles = {}
+        
+        for (key, value), offset in zip(self.start_angles.items(), self.controller.offsets.values()):
+            extracted_angles = []
+            for item in value:
+                if value.index(item) == 0:
+                    extracted_angles.append(self.joint_angle(offset, item+0))
+                else:
+                    extracted_angles.append(item)
+            self.joint_angles[key] = extracted_angles
+
+        print(self.joint_angles)
 
         self.offsets = self.controller.offsets
 
@@ -474,10 +481,6 @@ class angle_page(tk.Frame):
 
         # Rectify the angle in the angles dictionary
         self.controller.new_angles[leg][angle] = new_angle
-        
-        # print(self.controller.new_angles)
-        # print(self.controller.angles)
-        # print(self.controller.test_angles)
 
         # Rectify the plot
         self.controller.update_Simulation()
@@ -491,16 +494,10 @@ class angle_page(tk.Frame):
         self.controller.Hexapod_Serial.Serial_print(message)
         
     def plot_reset(self):
-        angles = {"Lg0": [90, 45, 90],
-                  "Lg1": [90, 45, 90],
-                  "Lg2": [90, 45, 90],
-                  "Lg3": [90, 45, 90],
-                  "Lg4": [90, 45, 90],
-                  "Lg5": [90, 45, 90]}
 
         message = ""
         
-        for name_tags, standard_angles in zip(tags.values(), angles.values()):
+        for name_tags, standard_angles in zip(tags.values(), self.joint_angles.values()):
             for tag, standard_angle in zip(name_tags.values(), standard_angles):
                 message = message + tag + str(standard_angle)
 
@@ -512,8 +509,8 @@ class angle_page(tk.Frame):
 
         self.init_flag = True
 
-        for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), angles.values()):
-            for angle_num, (label, slider, angle, real_angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg, self.start_angles.values())):
+        for leg_label, leg_slider, leg in zip(self.labels.values(), self.sliders.values(), self.joint_angles.values()):
+            for angle_num, (label, slider, angle) in enumerate(zip(leg_label.values(), leg_slider.values(), leg)):
                 label.config(text=f"Theta{angle_num}: {angle}")
 
                 slider.set(angle)
