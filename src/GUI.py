@@ -5,6 +5,7 @@ from ttkbootstrap import Style
 from functools import partial
 
 from test_OOP import *
+from inverse_Kinematics import *
 
 from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         # This copy's the contents of the angles dictionary, this is done because things like
         # Creating a shallow copy through the .copy() method, setting this dictionary equal to angles
         # for some reason seems to interlink self.start_angles and self.new_angles such that a rectification
-        # made to self.new_angles also rectifys self.start_angles in the exact same way
+        # made to self.new_angles also rectifies self.start_angles in the exact same way
         self.create_copy(angles, self.new_angles)
 
         self.offsets = offsets
@@ -118,6 +119,10 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         # Disable the user from changing the camera angle
         # ax.disable_mouse_rotation()
+        
+        ax.set_xlabel('xlabel', fontsize=18)
+        ax.set_ylabel('ylabel', fontsize=18)
+        ax.set_zlabel('zlabel', fontsize=18)
         
         class leg():
 
@@ -234,8 +239,8 @@ class Matplotlib3DPlotApp(tk.Tk):
                 # ax.set_axis_off()
                 
                 ax.set_xlabel('xlabel', fontsize=18)
-                ax.set_ylabel('ylabel', fontsize=16)
-                ax.set_zlabel('zlabel', fontsize=14)
+                ax.set_ylabel('ylabel', fontsize=18)
+                ax.set_zlabel('zlabel', fontsize=18)
 
             def plt_bot(self, angles, changed_legs):
                 # Clear plot and generate all necessary standard structures
@@ -298,6 +303,29 @@ class main_page(tk.Frame):
         self.parent = parent
         self.style = style
         self.controller = controller
+        origins = {"Lg0": (5, -5, 0),
+                   "Lg1": (0, -7, 0),
+                   "Lg2": (-5, -5, 0),
+                   "Lg3": (-5, 5, 0),
+                   "Lg4": (0, 7, 0),
+                   "Lg5": (5, 5, 0)}
+        
+        self.Legs_Inverse_Kinematics = {}
+        
+        # # Init Inverse Kinematics for each leg
+        # for key in self.origins.keys():
+        #     self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
+
+        x_pos = np.linspace(77,222,114)
+        y_pos = np.linspace(-5,-5,114)
+        z_pos = np.linspace(0,0,114)
+        
+        Leg0 = Inverse_kinematics((27,70,120), origin=(5, -5, 0))
+        print(Leg0.calculation((222,-5,-0)))
+        angle_list = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
+        # angle_list = Leg0.calculation(angle_list)
+        
+        self.Follow_line(angle_list=angle_list)
 
         # Dropdown menu variables
         self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
@@ -320,10 +348,6 @@ class main_page(tk.Frame):
         self.devices.set("Select Device")
         self.devices.bind("<<ComboboxSelected>>", self.communication_init)
         self.devices.config(state=tk.DISABLED)
-
-        # Create a frame for the plot
-        self.plot_frame = ttk.Frame(self)
-        self.plot_frame.grid(row=1, column=1, sticky='ne', padx=10, pady=(0, 10))
     
     def communication_type(self, event):
         # Enable devices
@@ -331,6 +355,32 @@ class main_page(tk.Frame):
         
         # Set communication to active
         self.controller.communication_activity = True
+    
+    def update_sim(self):
+        theta0_list, theta1_list, theta2_list = self.angle_list
+
+        self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
+        self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
+        self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
+        
+        self.controller.update_Simulation()
+        
+        if not self.counter == self.Stop:
+            self.after(1, self.update_sim)
+        else:
+            return
+        
+        self.counter+=1
+        print(self.counter)
+    
+    def Follow_line(self, angle_list):
+        self.angle_list = angle_list
+        
+        self.Stop = len(angle_list[0])
+        print(self.Stop)
+        self.counter = 0
+
+        self.update_sim()
     
     def communication_init(self, event):
         # Check if there is on going communication and stop if
@@ -349,7 +399,7 @@ class main_page(tk.Frame):
 
         print(device, port)
         
-        # Inialize Serial comunication
+        # Initialize Serial communication
         self.controller.Hexapod_Serial = Serial(port)
 
 class angle_page(tk.Frame):
@@ -484,13 +534,13 @@ class angle_page(tk.Frame):
 
         # Rectify the plot
         self.controller.update_Simulation()
-        
-        # Gnerate serial message
+
+        # Generate serial message
         message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
 
         print(message)
         
-        # Send changed anles through serial port
+        # Send changed angles through serial port
         self.controller.Hexapod_Serial.Serial_print(message)
         
     def plot_reset(self):
@@ -518,7 +568,7 @@ class angle_page(tk.Frame):
         # Copy new_angles into old_angles
         self.controller.create_copy(self.controller.new_angles, self.controller.old_angles)
 
-        # opy start_angles into new_angles
+        # Copy start_angles into new_angles
         self.controller.create_copy(self.start_angles, self.controller.new_angles)
 
         # Update the simulation

@@ -1,4 +1,5 @@
 from numpy import sqrt, arccos, arctan2, degrees
+import numpy as np
 
 class Inverse_kinematics():
 
@@ -31,7 +32,7 @@ class Inverse_kinematics():
 
         # Calculating theta0 isn't the same for all quadrants
 
-        if x >= xo:
+        if np.all(x >= xo):
             theta0 = degrees(arctan2((z - zo), (x - xo)))
         else:
             theta0 = degrees(180 + arctan2((z - zo), (x - xo)))
@@ -47,16 +48,37 @@ class Inverse_kinematics():
 
         # Calculating theta1 isn't the same for all quadrants
 
-        if x >= xo: # Quadrants 1 & 4
+        if np.all(x >= xo): # Quadrants 1 & 4
             theta1 = degrees(ß + a)
         else: # Quadrants 2 & 3
             theta1 = degrees(2*(90 + a) - a + ß)
         
         # Return calculated angles
         return theta0, theta1, theta2
+    
+    def calculation_as_int(self, angles):
+        return angles[0].astype(int), angles[1].astype(int), angles[2].astype(int)
 
-lengths = (27, 70, 120)
+'''lengths = (27, 70, 120)
 
 Leg0 = Inverse_kinematics(lengths)
 theta0, theta1, theta2 = Leg0.calculation((77, 0, 0))
 print(theta0, theta1, theta2)
+
+ammount = 114
+
+x_pos = np.linspace(77,190,ammount)
+y_pos = np.linspace(0,0,ammount)
+z_pos = np.linspace(0,0,ammount)
+
+angles = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
+
+angles = Leg0.calculation_as_int(angles)
+
+print(angles[0])
+print("________________")
+print(angles[1])
+print("________________")
+print(angles[2])
+print("________________")
+print(angles[2][113])'''
