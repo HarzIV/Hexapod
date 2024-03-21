@@ -124,6 +124,8 @@ class Matplotlib3DPlotApp(tk.Tk):
         ax.set_ylabel('ylabel', fontsize=18)
         ax.set_zlabel('zlabel', fontsize=18)
         
+        ax.plot([32,222],[-5,-5],[0,0])
+        
         class leg():
 
             def __init__(self, lg_origin, lengths):
@@ -189,6 +191,8 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.update(self.coxa, x0, y0, z0)
                 self.update(self.femur, x1, y1, z1)
                 self.update(self.tibia, x2, y2, z2)
+                # print("______________")
+                # print(x2, y2, z2)
         
         class Hexapod():
 
@@ -206,7 +210,8 @@ class Matplotlib3DPlotApp(tk.Tk):
                 # Set axis limit to prevent deformation of the plot when rectifying it
                 ax.set_xlim(-self.x_lim, self.x_lim)
                 ax.set_ylim(-self.y_lim, self.y_lim)
-                ax.set_zlim(-self.z_lim, self.z_lim) 
+                ax.set_zlim(-self.z_lim, self.z_lim)
+                print(self.x_lim)
                 
                 # Leg origin wire frame
                 x, y, z = [], [], []
@@ -321,7 +326,7 @@ class main_page(tk.Frame):
         z_pos = np.linspace(0,0,114)
         
         Leg0 = Inverse_kinematics((27,70,120), origin=(5, -5, 0))
-        print(Leg0.calculation((222,-5,-0)))
+        print(Leg0.calculation((227,-5,-0)))
         angle_list = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
         # angle_list = Leg0.calculation(angle_list)
         

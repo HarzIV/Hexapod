@@ -39,7 +39,7 @@ class Inverse_kinematics():
         
         x = sqrt((x-xo)**2+(z-zo)**2) - L0
 
-        G = sqrt((x-xo)**2+(y-yo)**2)
+        G = sqrt((x)**2+(y-yo)**2)
 
         theta2 = degrees(arccos((L1**2+L2**2-G**2)/(2*L1*L2)))
 
@@ -61,15 +61,15 @@ class Inverse_kinematics():
 
 '''lengths = (27, 70, 120)
 
-Leg0 = Inverse_kinematics(lengths)
-theta0, theta1, theta2 = Leg0.calculation((77, 0, 0))
-print(theta0, theta1, theta2)
+Leg0 = Inverse_kinematics(lengths, (5, -5, 0))
 
-ammount = 114
+print(Leg0.calculation((222, -5, 0)))'''
 
-x_pos = np.linspace(77,190,ammount)
-y_pos = np.linspace(0,0,ammount)
-z_pos = np.linspace(0,0,ammount)
+'''amount = 114
+
+x_pos = np.linspace(77,190,amount)
+y_pos = np.linspace(0,0,amount)
+z_pos = np.linspace(0,0,amount)
 
 angles = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
 
