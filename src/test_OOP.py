@@ -113,14 +113,14 @@ def Generate_full_message(angles: dict[str, list]):
     Message: str = ""
     
     # Parse through every legs
-    for leg in angles.values():
+    for key, value in angles.items():
         # Parse through current legs values
-        for angle in leg:
+        for angle in value:
             # Find tag
-                tag = tags[leg][str(leg.index(angle))]
-
-                # Generate message
-                Message = Message + f"{tag}{angle}"
+            tag = tags[key][str(value.index(angle))]
+            
+            # Generate message
+            Message = Message + f"{tag}{angle}"
     
     Message = Message + "X\n"
     
