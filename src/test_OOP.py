@@ -57,6 +57,25 @@ class Serial():
 
         return Message
 
+    def Generate_full_message(self, angles: dict[str, int]):
+        # Generate empty str
+        Message: str = ""
+        
+        # Parse through every legs
+        for leg in angles.values():
+            # Parse through current legs values
+            for angle in leg:
+                # Find tag
+                 tag = tags[leg][str(leg.index(angle))]
+
+                 # Generate message
+                 Message = Message + f"{tag}{angle}"
+        
+        Message = Message + "X\n"
+        
+        return Message
+                
+
     def Serial_close(self):
 
         MicroController = self.MicroController
@@ -88,3 +107,28 @@ while True:
     print(Message)
 
     Hexapod.Serial_send(Message)'''
+    
+def Generate_full_message(angles: dict[str, list]):
+    # Generate empty str
+    Message: str = ""
+    
+    # Parse through every legs
+    for leg in angles.values():
+        # Parse through current legs values
+        for angle in leg:
+            # Find tag
+                tag = tags[leg][str(leg.index(angle))]
+
+                # Generate message
+                Message = Message + f"{tag}{angle}"
+    
+    Message = Message + "X\n"
+    
+    return Message
+
+print(Generate_full_message(angles = {"Lg0": [-45, 45, 90],
+                                        "Lg1": [-90, 45, 90],
+                                        "Lg2": [-135, 45, 90],
+                                        "Lg3": [-225, 45, 90],
+                                        "Lg4": [-270, 45, 90],
+                                        "Lg5": [-315, 45, 90]}))
