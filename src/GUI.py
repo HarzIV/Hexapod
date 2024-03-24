@@ -60,7 +60,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.Simulation_init()
 
         # Page list
-        self.page_list = (main_page, angle_page)
+        self.page_list = (main_page, angle_page, gate_page)
 
         # Page names
         self.page_names = tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in self.page_list for class_str in [class_name.__name__])
@@ -308,29 +308,6 @@ class main_page(tk.Frame):
         self.parent = parent
         self.style = style
         self.controller = controller
-        origins = {"Lg0": (5, -5, 0),
-                   "Lg1": (0, -7, 0),
-                   "Lg2": (-5, -5, 0),
-                   "Lg3": (-5, 5, 0),
-                   "Lg4": (0, 7, 0),
-                   "Lg5": (5, 5, 0)}
-        
-        self.Legs_Inverse_Kinematics = {}
-        
-        # # Init Inverse Kinematics for each leg
-        # for key in self.origins.keys():
-        #     self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
-
-        x_pos = np.linspace(77,222,114)
-        y_pos = np.linspace(-5,-5,114)
-        z_pos = np.linspace(0,0,114)
-        
-        Leg0 = Inverse_kinematics((27,70,120), origin=(5, -5, 0))
-        print(Leg0.calculation((227,-5,-0)))
-        angle_list = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
-        # angle_list = Leg0.calculation(angle_list)
-        
-        self.Follow_line(angle_list=angle_list)
 
         # Dropdown menu variables
         self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
@@ -360,32 +337,6 @@ class main_page(tk.Frame):
         
         # Set communication to active
         self.controller.communication_activity = True
-    
-    def update_sim(self):
-        theta0_list, theta1_list, theta2_list = self.angle_list
-
-        self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
-        self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
-        self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
-        
-        self.controller.update_Simulation()
-        
-        if not self.counter == self.Stop:
-            self.after(1, self.update_sim)
-        else:
-            return
-        
-        self.counter+=1
-        print(self.counter)
-    
-    def Follow_line(self, angle_list):
-        self.angle_list = angle_list
-        
-        self.Stop = len(angle_list[0])
-        print(self.Stop)
-        self.counter = 0
-
-        self.update_sim()
     
     def communication_init(self, event):
         # Check if there is on going communication and stop if
@@ -587,6 +538,81 @@ class angle_page(tk.Frame):
     def joint_angle(self, offset_angle, input_angle):
         return input_angle - offset_angle + 90
 
+class gate_page(tk.Frame):
+    def __init__(self, parent, style, controller):
+        tk.Frame.__init__(self, parent, background=style.colors.primary)
+        self.parent = parent
+        self.style = style
+        self.controller = controller
+
+        # Tuple to store walking gates names
+        self.walking_gates = ["Tri Gate"]
+
+        # Dictionary to store buttons for each walking gate
+        self.gate_buttons = {}
+
+        # Frame to for buttons
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.grid(row=0, column=1, sticky="nw")
+        
+        origins = {"Lg0": (5, -5, 0),
+                   "Lg1": (0, -7, 0),
+                   "Lg2": (-5, -5, 0),
+                   "Lg3": (-5, 5, 0),
+                   "Lg4": (0, 7, 0),
+                   "Lg5": (5, 5, 0)}
+        
+        self.Legs_Inverse_Kinematics = {}
+        
+        # # Init Inverse Kinematics for each leg
+        # for key in self.origins.keys():
+        #     self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
+
+        x_pos = np.linspace(77,222,114)
+        y_pos = np.linspace(-5,-5,114)
+        z_pos = np.linspace(0,0,114)
+        
+        Leg0 = Inverse_kinematics((27,70,120), origin=(5, -5, 0))
+        print(Leg0.calculation((227,-5,-0)))
+        angle_list = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
+        # angle_list = Leg0.calculation(angle_list)
+        
+        # self.Follow_line(angle_list=angle_list)
+        
+        # Create button for each walking gate
+        for walking_gate in self.walking_gates:
+            # Create button
+            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Follow_line, angle_list=angle_list))
+            button.grid(pady=5, sticky="nw")
+            
+            # Store button
+            self.gate_buttons[walking_gate] = button
+    
+    def update_sim(self):
+        theta0_list, theta1_list, theta2_list = self.angle_list
+
+        self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
+        self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
+        self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
+        
+        self.controller.update_Simulation()
+        
+        if not self.counter == self.Stop:
+            self.after(1, self.update_sim)
+        else:
+            return
+        
+        self.counter+=1
+        print(self.counter)
+    
+    def Follow_line(self, angle_list):
+        self.angle_list = angle_list
+        
+        self.Stop = len(angle_list[0])
+        print(self.Stop)
+        self.counter = 0
+
+        self.update_sim()
 
 def main():
     app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
