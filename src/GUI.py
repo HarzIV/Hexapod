@@ -312,7 +312,10 @@ class main_page(tk.Frame):
         # Dropdown menu variables
         self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
         
-        self.Serial_ports, self.Serial_devices = Serial_devices_get()
+        try:
+            self.Serial_ports, self.Serial_devices = Serial_devices_get()
+        except:
+            self.Serial_ports, self.Serial_devices = (None, None)
 
         # Frame for selecting all settings
         self.communication_frame = ttk.Frame(self)
@@ -490,14 +493,17 @@ class angle_page(tk.Frame):
 
         # Rectify the plot
         self.controller.update_Simulation()
-
-        # Generate serial message
-        message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
-
-        print(message)
         
-        # Send changed angles through serial port
-        self.controller.Hexapod_Serial.Serial_print(message)
+        try:
+            # Generate serial message
+            message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
+            print(message)
+
+        
+            # Send changed angles through serial port
+            self.controller.Hexapod_Serial.Serial_print(message)
+        except:
+            pass
         
     def plot_reset(self):
 
@@ -511,7 +517,10 @@ class angle_page(tk.Frame):
 
         print(message)
 
-        self.controller.Hexapod_Serial.Serial_print(message)      
+        try:
+            self.controller.Hexapod_Serial.Serial_print(message)
+        except:
+            pass
 
         self.init_flag = True
 
