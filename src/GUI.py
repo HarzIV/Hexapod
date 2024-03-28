@@ -4,6 +4,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
 from functools import partial
 
+import time
+
 from test_OOP import *
 from inverse_Kinematics import *
 
@@ -270,9 +272,10 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-        self.update_Simulation()
         
-    def update_Simulation(self):        
+    def update_Simulation(self):
+        tstart = time.time()
+
         is_changed = False
         changed_legs = []
 
@@ -301,6 +304,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         
         # Update the canvas
         self.canvas.draw()
+        print('FPS: ' ,1/(time.time()-tstart))
 
 class main_page(tk.Frame):
     def __init__(self, parent, style, controller):
@@ -598,7 +602,7 @@ class gate_page(tk.Frame):
         self.controller.update_Simulation()
         
         if not self.counter == self.Stop:
-            self.after(1, self.update_sim)
+            self.after(50, self.update_sim)
         else:
             return
         
