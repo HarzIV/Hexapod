@@ -316,7 +316,10 @@ class main_page(tk.Frame):
         # Dropdown menu variables
         self.communication_options = ["Bluetooth", "Wi-Fi", "Serial"]
         
-        self.Serial_ports, self.Serial_devices = Serial_devices_get()
+        try:
+            self.Serial_ports, self.Serial_devices = Serial_devices_get()
+        except:
+            self.Serial_ports, self.Serial_devices = (None, None)
 
         # Frame for selecting all settings
         self.communication_frame = ttk.Frame(self)
@@ -483,25 +486,35 @@ class angle_page(tk.Frame):
         # Convert the value to an integer
         new_angle = int(float(value))
 
+        # This is only done for the third angle
+        if angle == 2:
+            value = 180 - new_angle
+
         # Update the label text with the new angle
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
         # Take the offset for the current leg into consideration so the perspective of the angle matches the maths
-        new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
+        # This is only done for the the first angle as this is the only angle with an offset
+        if angle == 0:
+            new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
 
         # Rectify the angle in the angles dictionary
         self.controller.new_angles[leg][angle] = new_angle
+        print(new_angle)
 
         # Rectify the plot
         self.controller.update_Simulation()
-
-        # Generate serial message
-        message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
-
-        print(message)
         
-        # Send changed angles through serial port
-        self.controller.Hexapod_Serial.Serial_print(message)
+        try:
+            # Generate serial message
+            message = self.controller.Hexapod_Serial.Generate_message(leg, angle, value)
+            print(message)
+
+        
+            # Send changed angles through serial port
+            self.controller.Hexapod_Serial.Serial_print(message)
+        except:
+            pass
         
     def plot_reset(self):
 
@@ -515,7 +528,10 @@ class angle_page(tk.Frame):
 
         print(message)
 
-        self.controller.Hexapod_Serial.Serial_print(message)      
+        try:
+            self.controller.Hexapod_Serial.Serial_print(message)
+        except:
+            pass
 
         self.init_flag = True
 
