@@ -126,8 +126,6 @@ class Matplotlib3DPlotApp(tk.Tk):
         ax.set_ylabel('ylabel', fontsize=18)
         ax.set_zlabel('zlabel', fontsize=18)
         
-        ax.plot([32,222],[-5,-5],[0,0])
-        
         class leg():
 
             def __init__(self, lg_origin, lengths):
@@ -193,8 +191,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.update(self.coxa, x0, y0, z0)
                 self.update(self.femur, x1, y1, z1)
                 self.update(self.tibia, x2, y2, z2)
-                # print("______________")
-                # print(x2, y2, z2)
         
         class Hexapod():
 
@@ -213,7 +209,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 ax.set_xlim(-self.x_lim, self.x_lim)
                 ax.set_ylim(-self.y_lim, self.y_lim)
                 ax.set_zlim(-self.z_lim, self.z_lim)
-                print(self.x_lim)
                 
                 # Leg origin wire frame
                 x, y, z = [], [], []
@@ -237,17 +232,8 @@ class Matplotlib3DPlotApp(tk.Tk):
                     self.legs[key] = leg(origins[key], self.lengths)
                     self.legs[key].plt_Leg(start_angels[key])
             
-            def clr_plot(self):
-                # Clear the plot
-                ax.clear()
-
-                # Regenerate everything that was falsely deleted
-                # Disable Axis
-                # ax.set_axis_off()
-                
-                ax.set_xlabel('xlabel', fontsize=18)
-                ax.set_ylabel('ylabel', fontsize=18)
-                ax.set_zlabel('zlabel', fontsize=18)
+            def plt_any(self, x: list, y: list, z: list):
+                ax.plot(x, y, z, color="pink")
 
             def plt_bot(self, angles, changed_legs):
                 # Clear plot and generate all necessary standard structures
@@ -272,6 +258,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.update_Simulation()
         
     def update_Simulation(self):
         tstart = time.time()
@@ -500,7 +487,6 @@ class angle_page(tk.Frame):
 
         # Rectify the angle in the angles dictionary
         self.controller.new_angles[leg][angle] = new_angle
-        print(new_angle)
 
         # Rectify the plot
         self.controller.update_Simulation()
@@ -584,20 +570,18 @@ class gate_page(tk.Frame):
         
         self.Legs_Inverse_Kinematics = {}
         
-        # # Init Inverse Kinematics for each leg
-        # for key in self.origins.keys():
-        #     self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
+        # Init Inverse Kinematics for each leg
+        for key in origins.keys():
+            self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
 
         x_pos = np.linspace(77,222,114)
         y_pos = np.linspace(-5,-5,114)
         z_pos = np.linspace(0,0,114)
         
-        Leg0 = Inverse_kinematics((27,70,120), origin=(5, -5, 0))
-        print(Leg0.calculation((227,-5,-0)))
-        angle_list = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
-        # angle_list = Leg0.calculation(angle_list)
+        self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
         
-        # self.Follow_line(angle_list=angle_list)
+        angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation(coordinates=(x_pos,y_pos,z_pos))
+        angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation_as_int(angle_list)
         
         # Create button for each walking gate
         for walking_gate in self.walking_gates:
@@ -616,6 +600,11 @@ class gate_page(tk.Frame):
         self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
         
         self.controller.update_Simulation()
+        
+        # message = self.controller.Hexapod_Serial.Generate_full_message(angles=self.controller.new_angles)
+        # print(message)
+        
+        # self.controller.Hexapod_Serial.Serial_print(message)
         
         if not self.counter == self.Stop:
             self.after(50, self.update_sim)

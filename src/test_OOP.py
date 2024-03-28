@@ -57,16 +57,16 @@ class Serial():
 
         return Message
 
-    def Generate_full_message(self, angles: dict[str, int]):
+    def Generate_full_message(self, angles: dict[str, list]):
         # Generate empty str
         Message: str = ""
         
         # Parse through every legs
-        for leg in angles.values():
+        for leg_key, leg_value in angles.items():
             # Parse through current legs values
-            for angle in leg:
+            for angle in leg_value:
                 # Find tag
-                 tag = tags[leg][str(leg.index(angle))]
+                 tag = tags[leg_key][str(leg_value.index(angle))]
 
                  # Generate message
                  Message = Message + f"{tag}{angle}"
