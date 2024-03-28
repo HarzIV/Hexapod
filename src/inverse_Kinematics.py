@@ -6,25 +6,8 @@ class Inverse_kinematics():
     def __init__(self, lengths=(), origin=(0, 0, 0)):
         self.lengths = lengths
         self.origin = origin
-    
-    def check_lengths(self):
-        L0, L1, L2 = self.lengths
 
-        if L0 < 0: # Link 0 cannot be negative
-            L0_status = False
-        
-        if L1 < 0: # Link 1 cannot be negative
-            L1_status = False
-
-        if L2 < 0: # Link 2 cannot be negative
-            L2_status = False
-
-        return L0_status, L1_status, L2_status
-    
-    def check_input(self):
-        pass
-
-    def calculation(self, coordinates):
+    def calculation(self, coordinates: tuple):
         # Assigning variables to all element inside the tuples
         x, y, z = coordinates
         xo, yo, zo = self.origin
@@ -63,12 +46,12 @@ class Inverse_kinematics():
 
 Leg0 = Inverse_kinematics(lengths, (5, -5, 0))
 
-print(Leg0.calculation((222, -5, 0)))'''
+print(Leg0.calculation((222, -5, 0)))
 
-'''amount = 114
+amount = 114
 
-x_pos = np.linspace(77,190,amount)
-y_pos = np.linspace(0,0,amount)
+x_pos = np.linspace(82,190,amount)
+y_pos = np.linspace(-5,-5,amount)
 z_pos = np.linspace(0,0,amount)
 
 angles = Leg0.calculation(coordinates=(x_pos,y_pos,z_pos))
@@ -81,4 +64,6 @@ print(angles[1])
 print("________________")
 print(angles[2])
 print("________________")
-print(angles[2][113])'''
+print(angles[2][113])
+
+print(Leg0.calculation((82,-5,0)))'''

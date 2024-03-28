@@ -28,7 +28,7 @@ def Serial_devices_get():
 
 class Serial():
 
-    def __init__(self, com_port, baud=9600):
+    def __init__(self, com_port, baud=115200):
         
         self.com_port = com_port
         self.baud = baud
@@ -59,17 +59,17 @@ class Serial():
 
     def Generate_full_message(self, angles: dict[str, list]):
         # Generate empty str
-        Message: str = ""
+        Message = ""
         
         # Parse through every legs
-        for leg_key, leg_value in angles.items():
+        for key, value in angles.items():
             # Parse through current legs values
-            for angle in leg_value:
+            for i, (angle) in enumerate(value):
                 # Find tag
-                 tag = tags[leg_key][str(leg_value.index(angle))]
-
-                 # Generate message
-                 Message = Message + f"{tag}{angle}"
+                tag = tags[key][str(i)]
+                
+                # Generate message
+                Message = Message + f"{tag}{angle}"
         
         Message = Message + "X\n"
         
@@ -108,9 +108,9 @@ while True:
 
     Hexapod.Serial_send(Message)'''
     
-def Generate_full_message(angles: dict[str, list]):
+"""def Generate_full_message(angles: dict[str, list]):
     # Generate empty str
-    Message: str = ""
+    Message = ""
     
     # Parse through every legs
     for key, value in angles.items():
@@ -131,4 +131,4 @@ print(Generate_full_message(angles = {"Lg0": [-45, 45, 90],
                                         "Lg2": [-135, 45, 90],
                                         "Lg3": [-225, 45, 90],
                                         "Lg4": [-270, 45, 90],
-                                        "Lg5": [-315, 45, 90]}))
+                                        "Lg5": [-315, 45, 90]}))"""
