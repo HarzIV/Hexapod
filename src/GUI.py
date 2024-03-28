@@ -482,14 +482,21 @@ class angle_page(tk.Frame):
         # Convert the value to an integer
         new_angle = int(float(value))
 
+        # This is only done for the third angle
+        if angle == 2:
+            value = 180 - new_angle
+
         # Update the label text with the new angle
         self.labels[leg][f"theta{angle}_label"].config(text=f"Theta{angle}: {new_angle}")
 
         # Take the offset for the current leg into consideration so the perspective of the angle matches the maths
-        new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
+        # This is only done for the the first angle as this is the only angle with an offset
+        if angle == 0:
+            new_angle = self.main_angle(offset_angle=self.offsets[leg], input_angle=new_angle)
 
         # Rectify the angle in the angles dictionary
         self.controller.new_angles[leg][angle] = new_angle
+        print(new_angle)
 
         # Rectify the plot
         self.controller.update_Simulation()
