@@ -5,16 +5,18 @@ from ttkbootstrap import Style
 from functools import partial
 
 import time
+import numpy as np
+
 
 from test_OOP import *
-from src.LegMath import *
+from LegMath import *
 
 from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 class Matplotlib3DPlotApp(tk.Tk):
-    def __init__(self, offsets, angles, *args, **kwargs):
+    def __init__(self, offsets, angles, origins, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         # Initialize root functions
@@ -40,6 +42,8 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.create_copy(angles, self.new_angles)
 
         self.offsets = offsets
+        
+        self.origins = origins
         
         self.communication_activity = False
         
@@ -137,40 +141,6 @@ class Matplotlib3DPlotApp(tk.Tk):
                 self.femur, = ax.plot([], [], [], color="red")
                 self.tibia, = ax.plot([], [], [], color="blue")
 
-            def calc_end_point(self, angles, accuracy=2):
-
-                theta0, theta1, theta2 = angles
-                theta0, theta1, theta2 = radians(theta0), radians(theta1), radians(theta2)
-
-                xo, yo, zo = self.lg_origin
-                L0, L1, L2 = self.lengths
-
-                x0_end = round((xo + cos(theta0) * L0), accuracy)
-                y0_end = round((yo + sin(theta0) * L0), accuracy)
-                z0_end = zo
-
-                limb0_x = [xo, x0_end]
-                limb0_y = [yo, y0_end]
-                limb0_z = [zo, z0_end]
-
-                x1_end = round((x0_end + cos(theta0) * cos(theta1) * L1), accuracy)
-                y1_end = round((y0_end + sin(theta0) * cos(theta1) * L1), accuracy)
-                z1_end = round((zo + sin(theta1) * L1), accuracy)
-
-                limb1_x = [x0_end, x1_end]
-                limb1_y = [y0_end, y1_end]
-                limb1_z = [z0_end, z1_end]
-                
-                x2_end = round((x0_end + cos(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
-                y2_end = round((y0_end + sin(theta0) * ((cos(theta2 - pi) * L2 + L1) * cos(theta1) - (sin(theta2 - pi) * L2) * sin(theta1))), accuracy)
-                z2_end = round((zo + ((cos(theta2 - pi) * L2 + L1) * sin(theta1)) + ((sin(theta2 - pi) * L2) * cos(theta1))), accuracy)
-
-                limb2_x = [x1_end, x2_end]
-                limb2_y = [y1_end, y2_end]
-                limb2_z = [z1_end, z2_end]
-
-                return (limb0_x, limb0_y, limb0_z), (limb1_x, limb1_y, limb1_z), (limb2_x, limb2_y, limb2_z)
-
             def update(self, limb, x, y, z):
                 limb.set_data(x, y)
                 limb.set_3d_properties(z)
@@ -182,7 +152,7 @@ class Matplotlib3DPlotApp(tk.Tk):
 
             def plt_Leg(self, angles):
                 
-                limb0, limb1, limb2 = self.calc_end_point(angles)
+                limb0, limb1, limb2 = Forward_Kinematics(angles=angles, origin=self.lg_origin, lengths=self.lengths)
 
                 x0, y0, z0 = limb0
                 x1, y1, z1 = limb1
@@ -242,16 +212,9 @@ class Matplotlib3DPlotApp(tk.Tk):
                 # Update leg plot
                 for changed_leg in changed_legs:
                     self.legs[changed_leg].plt_Leg(angles[changed_leg])
-
-        origins = {"Lg0": (5, -5, 0),
-                   "Lg1": (0, -7, 0),
-                   "Lg2": (-5, -5, 0),
-                   "Lg3": (-5, 5, 0),
-                   "Lg4": (0, 7, 0),
-                   "Lg5": (5, 5, 0)}
                 
         # self.Leg = leg(lg_origin=(0,0,0), lengths=(10, 20, 30))
-        self.Hex = Hexapod(origins, (27, 70, 120), self.start_angles)
+        self.Hex = Hexapod(self.origins, (27, 70, 120), self.start_angles)
         
         plt.ion()
 
@@ -561,40 +524,26 @@ class gate_page(tk.Frame):
         self.button_frame = ttk.Frame(self)
         self.button_frame.grid(row=0, column=1, sticky="nw")
         
-        origins = {"Lg0": (5, -5, 0),
-                   "Lg1": (0, -7, 0),
-                   "Lg2": (-5, -5, 0),
-                   "Lg3": (-5, 5, 0),
-                   "Lg4": (0, 7, 0),
-                   "Lg5": (5, 5, 0)}
-        
         self.Legs_Inverse_Kinematics = {}
-        
-        # Init Inverse Kinematics for each leg
-        for key in origins.keys():
-            self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
 
         '''x_pos = np.linspace(82,222,114)
         y_pos = np.linspace(-5,-5,114)
         z_pos = np.linspace(0,0,114)'''
 
-        x_pos = np.linspace(150,150,114)
+        '''x_pos = np.linspace(150,150,114)
         y_pos = np.linspace(-70,70,114)
         d = sqrt((y_pos[len(y_pos)-1]-y_pos[0])**2)
-        z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40
+        z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40'''
         # z_pos = round(z_pos)
+        
+        x_pos, y_pos = Sinusoidal_pattern(distance=140, height=40)
+        x_pos, y_pos, z_pos = convert2_3d(xy_lists=(x_pos, y_pos), origin=(150, -70, 0), angle=90)
         
         self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
         print(x_pos, y_pos, z_pos)
         
-
-        angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation(coordinates=(x_pos,y_pos,z_pos))
-        angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation_as_int(angle_list)
-        print('/////////////')
-        print(angle_list)
-        print(angle_list[0][113])
-        print(self.Legs_Inverse_Kinematics["Lg0"].calculation(coordinates=(x_pos[113],y_pos[113],z_pos[113])))
-        print(x_pos[113],y_pos[113],z_pos[113])
+        angle_list = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=(x_pos,y_pos,z_pos))
+        angle_list = turn2int(angle_list)
 
         # Create button for each walking gate
         for walking_gate in self.walking_gates:
@@ -651,7 +600,13 @@ def main():
                                         "Lg2": [-135, 45, 90],
                                         "Lg3": [-225, 45, 90],
                                         "Lg4": [-270, 45, 90],
-                                        "Lg5": [-315, 45, 90]})
+                                        "Lg5": [-315, 45, 90]},
+                              origins = {"Lg0": (5, -5, 0),
+                                         "Lg1": (0, -7, 0),
+                                         "Lg2": (-5, -5, 0),
+                                         "Lg3": (-5, 5, 0),
+                                         "Lg4": (0, 7, 0),
+                                         "Lg5": (5, 5, 0)})
 
     app.mainloop()
 
