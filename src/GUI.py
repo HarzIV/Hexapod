@@ -574,15 +574,27 @@ class gate_page(tk.Frame):
         for key in origins.keys():
             self.Legs_Inverse_Kinematics[key] = Inverse_kinematics(lengths=(27, 70, 120), origin=origins[key])
 
-        x_pos = np.linspace(82,222,114)
+        '''x_pos = np.linspace(82,222,114)
         y_pos = np.linspace(-5,-5,114)
-        z_pos = np.linspace(0,0,114)
+        z_pos = np.linspace(0,0,114)'''
+
+        x_pos = np.linspace(150,150,114)
+        y_pos = np.linspace(-70,70,114)
+        d = sqrt((y_pos[len(y_pos)-1]-y_pos[0])**2)
+        z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40
+        # z_pos = round(z_pos)
         
         self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
+        print(x_pos, y_pos, z_pos)
         
 
         angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation(coordinates=(x_pos,y_pos,z_pos))
         angle_list = self.Legs_Inverse_Kinematics["Lg0"].calculation_as_int(angle_list)
+        print('/////////////')
+        print(angle_list)
+        print(angle_list[0][113])
+        print(self.Legs_Inverse_Kinematics["Lg0"].calculation(coordinates=(x_pos[113],y_pos[113],z_pos[113])))
+        print(x_pos[113],y_pos[113],z_pos[113])
 
         # Create button for each walking gate
         for walking_gate in self.walking_gates:
@@ -611,7 +623,7 @@ class gate_page(tk.Frame):
         self.controller.Hexapod_Serial.Serial_print(message)
         
         if not self.counter == self.Stop:
-            self.after(50, self.update_sim)
+            self.after(20, self.update_sim)
         else:
             return
         

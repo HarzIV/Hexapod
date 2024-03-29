@@ -16,18 +16,18 @@ class Inverse_kinematics():
         # Calculating theta0 isn't the same for all quadrants
 
         if np.all(x >= xo):
-            theta0 = degrees(arctan2((z - zo), (x - xo)))
+            theta0 = degrees(arctan2((y - yo), (x - xo)))
         else:
-            theta0 = degrees(180 + arctan2((z - zo), (x - xo)))
+            theta0 = 180 + degrees(arctan2((y - yo), (x - xo)))
         
-        x = sqrt((x-xo)**2+(z-zo)**2) - L0
+        x = sqrt((x-xo)**2+(y-yo)**2) - L0
 
-        G = sqrt((x)**2+(y-yo)**2)
+        G = sqrt((x)**2+(z-zo)**2)
 
         theta2 = degrees(arccos((L1**2+L2**2-G**2)/(2*L1*L2)))
 
         ß = arccos((G**2+L1**2-L2**2)/(2*G*L1))
-        a = arctan2((y-yo), (x-xo))
+        a = arctan2((z-zo), (x-xo))
 
         # Calculating theta1 isn't the same for all quadrants
 
