@@ -7,7 +7,7 @@ from functools import partial
 import time
 
 from test_OOP import *
-from inverse_Kinematics import *
+from src.LegMath import *
 
 from numpy import sin, cos, radians, pi
 import matplotlib.pyplot as plt

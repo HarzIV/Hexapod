@@ -13,8 +13,9 @@ def walking_pattern(distance, resolution=20):
 
     return x_pos, y_pos
 
-def convert2_3d(xy_lists, angle, origin=(0,0,0)):
+def convert2_3d(xy_lists, angle: float, origin=(0,0,0)):
     # angle has to be in radians
+    angle = radians(angle)
 
     # Assigning variables to each value in xy_list
     x_pos, y_pos = xy_lists
