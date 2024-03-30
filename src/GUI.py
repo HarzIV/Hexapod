@@ -66,7 +66,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.Simulation_init()
 
         # Page list
-        self.page_list = (main_page, angle_page, gate_page)
+        self.page_list = (main_page, slider_page, gate_page)
 
         # Page names
         self.page_names = tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in self.page_list for class_str in [class_name.__name__])
@@ -157,6 +157,9 @@ class Matplotlib3DPlotApp(tk.Tk):
                 x0, y0, z0 = limb0
                 x1, y1, z1 = limb1
                 x2, y2, z2 = limb2
+                
+                print(x2[1], y2[1], z2[1])
+                print('LEG')
                 
                 self.update(self.coxa, x0, y0, z0)
                 self.update(self.femur, x1, y1, z1)
@@ -315,7 +318,7 @@ class main_page(tk.Frame):
         # Initialize Serial communication
         self.controller.Hexapod_Serial = Serial(port)
 
-class angle_page(tk.Frame):
+class slider_page(tk.Frame):
     def __init__(self, parent, style, controller):
         tk.Frame.__init__(self, parent, background=style.colors.primary)
         self.parent = parent
@@ -536,8 +539,8 @@ class gate_page(tk.Frame):
         z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40'''
         # z_pos = round(z_pos)
         
-        x_pos, y_pos = Sinusoidal_pattern(distance=140, height=40)
-        x_pos, y_pos, z_pos = convert2_3d(xy_lists=(x_pos, y_pos), origin=(150, -70, 0), angle=90)
+        x_pos, y_pos = Square_Pattern(distance=120, height=40)
+        x_pos, y_pos, z_pos = convert2_3d(xy_lists=(x_pos, y_pos), origin=(119.09-60, -119.09, -35.36), angle=0)
         
         self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
         print(x_pos, y_pos, z_pos)
@@ -555,34 +558,34 @@ class gate_page(tk.Frame):
             self.gate_buttons[walking_gate] = button
     
     def update_sim(self):
-        theta0_list, theta1_list, theta2_list = self.angle_list
-
-        self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
-        self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
-        self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
-        
-        self.controller.update_Simulation()
-        
-        self.controller.new_angles["Lg0"][0] = theta0_list[self.counter] + 45 + 90
-        self.controller.new_angles["Lg0"][2] = 180 - theta2_list[self.counter]
-        
-        message = self.controller.Hexapod_Serial.Generate_full_message(angles=self.controller.new_angles)
-        print(message)
-
-        self.controller.Hexapod_Serial.Serial_print(message)
-        
         if not self.counter == self.Stop:
+            
+
+            self.counter+=1
+            print(self.counter)
+
+            theta0_list, theta1_list, theta2_list = self.angle_list
+
+            self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
+            self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
+            self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
+            
+            self.controller.update_Simulation()
+            
+            self.controller.new_angles["Lg0"][0] = theta0_list[self.counter] + 45 + 90
+            self.controller.new_angles["Lg0"][2] = 180 - theta2_list[self.counter]
+            
+            message = self.controller.Hexapod_Serial.Generate_full_message(angles=self.controller.new_angles)
+            print(message)
+
+            self.controller.Hexapod_Serial.Serial_print(message)
+            
             self.after(20, self.update_sim)
-        else:
-            return
-        
-        self.counter+=1
-        print(self.counter)
     
     def Follow_line(self, angle_list):
         self.angle_list = angle_list
         
-        self.Stop = len(angle_list[0])
+        self.Stop = len(angle_list[0])-1
         print(self.Stop)
         self.counter = 0
 

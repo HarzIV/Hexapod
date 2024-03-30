@@ -1,6 +1,6 @@
 # Dictionary's to store dynamic variables that have multiple instances
 
-# Dictionary to store the standart leg offset angles
+# Dictionary to store the standard leg offset angles
 offsets = {"Lg0": -45,
            "Lg1": -90,
            "Lg2": -135,
