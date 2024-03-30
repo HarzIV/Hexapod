@@ -70,7 +70,7 @@ def turn2int(angles):
     return angles[0].astype(int), angles[1].astype(int), angles[2].astype(int)
 
 # Generate Sinusoidal Walking Pattern
-def Sinusoidal_pattern(distance: float, height: float, resolution: int=20) -> tuple[float, float]:
+def Sinusoidal_pattern(distance: float, resolution: int=20) -> tuple[float, float]:
     # determines the size for each step of the resolution to cover the distance
     step = distance / resolution
 
@@ -78,11 +78,11 @@ def Sinusoidal_pattern(distance: float, height: float, resolution: int=20) -> tu
 
     x_pos = arange(0, distance + step, step)
 
-    y_pos = sin(x_pos * adjustment_value) * height
+    y_pos = sin(x_pos * adjustment_value)
 
     return x_pos, y_pos
 
-def Square_Pattern(distance: float, height: float) -> tuple[float, float]:
+def Square_Pattern(distance: float, height: float=10) -> tuple[float, float]:
 
     x_pos = array([0, 0, distance, distance])
     y_pos = array([0, height, height, 0])
