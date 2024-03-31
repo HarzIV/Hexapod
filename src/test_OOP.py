@@ -71,7 +71,7 @@ class Serial():
                 # Generate message
                 Message = Message + f"{tag}{angle}"
         
-        Message = Message + "X\n\0"
+        Message = Message + "X\n"
         
         return Message
                 
