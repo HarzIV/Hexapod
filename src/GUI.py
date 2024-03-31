@@ -1,19 +1,17 @@
 import tkinter as tk
 from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
 from functools import partial
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 import time
 import numpy as np
 
-
 from test_OOP import *
 from LegMath import *
-
-from numpy import sin, cos, radians, pi
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 class Matplotlib3DPlotApp(tk.Tk):
     def __init__(self, offsets, angles, origins, *args, **kwargs):
@@ -66,7 +64,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.Simulation_init()
 
         # Page list
-        self.page_list = (main_page, slider_page, gate_page)
+        self.page_list = (main_page, angle_page, gate_page)
 
         # Page names
         self.page_names = tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in self.page_list for class_str in [class_name.__name__])
@@ -205,7 +203,8 @@ class Matplotlib3DPlotApp(tk.Tk):
                     self.legs[key] = leg(origins[key], self.lengths)
                     self.legs[key].plt_Leg(start_angels[key])
             
-            def plt_any(self, x: list, y: list, z: list):
+            def plt_any(self, xyz: tuple[list, list, list]):
+                x, y, z = xyz
                 ax.plot(x, y, z, color="pink")
 
             def plt_bot(self, angles, changed_legs):
@@ -318,7 +317,7 @@ class main_page(tk.Frame):
         # Initialize Serial communication
         self.controller.Hexapod_Serial = Serial(port)
 
-class slider_page(tk.Frame):
+class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
         tk.Frame.__init__(self, parent, background=style.colors.primary)
         self.parent = parent
@@ -511,7 +510,7 @@ class slider_page(tk.Frame):
         return input_angle - offset_angle + 90
 
 class gate_page(tk.Frame):
-    def __init__(self, parent, style, controller):
+    def __init__(self, parent, style, controller) -> None:
         tk.Frame.__init__(self, parent, background=style.colors.primary)
         self.parent = parent
         self.style = style
@@ -520,51 +519,76 @@ class gate_page(tk.Frame):
         # Tuple to store walking gates names
         self.walking_gates = ["Tri Gate"]
 
-        # Dictionary to store buttons for each walking gate
-        self.gate_buttons = {}
-
         # Frame to for buttons
         self.button_frame = ttk.Frame(self)
         self.button_frame.grid(row=0, column=1, sticky="nw")
         
-        self.Legs_Inverse_Kinematics = {}
+        # Dictionary for path types
+        self.path_types = {'Sinusoidal': Sinusoidal_pattern, 'Square': Square_Pattern}
+        
+        self.path_names = ['Sinusoidal', 'Square']
+        
+        # Dropdown menu to set the com port to use
+        self.path = ttk.Combobox(self.button_frame, values=self.path_names, state="readonly")
+        self.path.grid(padx=5, pady=(5, 0))
+        self.path.set("Select Path Type")
+        self.path.bind("<<ComboboxSelected>>", self.gen_paths)
 
-        '''x_pos = np.linspace(82,222,114)
-        y_pos = np.linspace(-5,-5,114)
-        z_pos = np.linspace(0,0,114)'''
-
-        '''x_pos = np.linspace(150,150,114)
-        y_pos = np.linspace(-70,70,114)
-        d = sqrt((y_pos[len(y_pos)-1]-y_pos[0])**2)
-        z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40'''
-        # z_pos = round(z_pos)
-        
-        x_pos, y_pos = Square_Pattern(distance=120, height=40)
-        x_pos, y_pos, z_pos = convert2_3d(xy_lists=(x_pos, y_pos), origin=(119.09-60, -119.09, -35.36), angle=0)
-        
-        self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
-        print(x_pos, y_pos, z_pos)
-        
-        angle_list = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=(x_pos,y_pos,z_pos))
-        angle_list = turn2int(angle_list)
+        # Dictionary to store buttons for each walking gate
+        self.gate_buttons = {}
 
         # Create button for each walking gate
         for walking_gate in self.walking_gates:
             # Create button
-            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Follow_line, angle_list=angle_list))
-            button.grid(pady=5, sticky="nw")
+            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Init_walk, walking_gate))
+            button.grid(padx=5, pady=5, sticky="nw")
+            button.config(state=tk.DISABLED)
             
             # Store button
             self.gate_buttons[walking_gate] = button
+
+        # Dictionary for paths for each gate
+        self.gate_paths = {}
     
-    def update_sim(self):
-        if not self.counter == self.Stop:
+    def gen_paths(self, event):
+        # Generate path for each gait
+        for walking_gate in self.walking_gates:
+            # Get path type
+            path_type = str(self.path.get())
+
+            # Generate x, y, z data
+            xy_pos = self.path_types[path_type](distance=120, height=40)
+            xyz_pos = convert2_3d(xy_lists=xy_pos, origin=(119.09-60, -119.09, -35.36), angle=0)
             
+            self.gate_paths[walking_gate] = xyz_pos
+        
+        # Enable gate buttons
+        for button in self.gate_buttons.values():
+            button.config(state='readonly')
+    
+    def Init_walk(self, gait: str) -> None:
+        # Get angles for specific gate
+        xyz_pos = self.gate_paths[gait]
+        
+        # Convert x, y, z data to angles
+        angles = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=xyz_pos)
+        angles = turn2int(angles)
 
-            self.counter+=1
-            print(self.counter)
+        # Get stop
+        self.Stop = len(angles[0])
 
-            theta0_list, theta1_list, theta2_list = self.angle_list
+        # Set counter to 0
+        self.counter = 0
+        
+        # Draw walking path
+        self.controller.Hex.plt_any(xyz_pos)
+
+        # Call update sim
+        self.update_sim(angles)
+        
+    def update_sim(self, angles) -> None:
+        if not self.counter == self.Stop:
+            theta0_list, theta1_list, theta2_list = angles
 
             self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
             self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
@@ -580,18 +604,11 @@ class gate_page(tk.Frame):
 
             self.controller.Hexapod_Serial.Serial_print(message)
             
-            self.after(20, self.update_sim)
-    
-    def Follow_line(self, angle_list):
-        self.angle_list = angle_list
+            self.after(20, partial(self.update_sim, angles))
         
-        self.Stop = len(angle_list[0])-1
-        print(self.Stop)
-        self.counter = 0
+        self.counter+=1
 
-        self.update_sim()
-
-def main():
+def main() -> None:
     app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
                                          "Lg1": -90,
                                          "Lg2": -135,
