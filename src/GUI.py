@@ -130,7 +130,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         
         class leg():
 
-            def __init__(self, lg_origin, lengths):
+            def __init__(self, lg_origin, lengths) -> None:
                 self.lg_origin = lg_origin
                 self.lengths = lengths
 
@@ -203,9 +203,20 @@ class Matplotlib3DPlotApp(tk.Tk):
                     self.legs[key] = leg(origins[key], self.lengths)
                     self.legs[key].plt_Leg(start_angels[key])
             
-            def plt_any(self, xyz: tuple[list, list, list]):
+            def create_plt(self):
+                plot, = ax.plot([], [], [], color="pink")
+                
+                return plot
+            
+            def plt_any(self, plot, xyz: tuple[list, list, list]):
                 x, y, z = xyz
-                ax.plot(x, y, z, color="pink")
+
+                plot.set_data(x, y)
+                plot.set_3d_properties(z)
+            
+            def del_any(self, plot) -> None:
+                plot.set_data([], [])
+                plot.set_3d_properties([])
 
             def plt_bot(self, angles, changed_legs):
                 # Clear plot and generate all necessary standard structures
@@ -518,10 +529,13 @@ class gate_page(tk.Frame):
 
         # Tuple to store walking gates names
         self.walking_gates = ["Tri Gate"]
+        
+        # Create plot object for showing walking paths
+        self.path_plot = self.controller.Hex.create_plt()
 
         # Frame to for buttons
         self.button_frame = ttk.Frame(self)
-        self.button_frame.grid(row=0, column=1, sticky="nw")
+        self.button_frame.grid(row=0, column=0, columnspan=2, sticky="nw")
         
         # Dictionary for path types
         self.path_types = {'Sinusoidal': Sinusoidal_pattern, 'Square': Square_Pattern}
@@ -530,9 +544,13 @@ class gate_page(tk.Frame):
         
         # Dropdown menu to set the com port to use
         self.path = ttk.Combobox(self.button_frame, values=self.path_names, state="readonly")
-        self.path.grid(padx=5, pady=(5, 0))
+        self.path.grid(padx=5)
         self.path.set("Select Path Type")
         self.path.bind("<<ComboboxSelected>>", self.gen_paths)
+        
+        # Button to enable or disable showing the walking path
+        self.path_button = ttk.Button(self.button_frame, text='Show Path', style='success', command=self.show_path)
+        self.path_button.grid(row=0, column=1, pady=5)
 
         # Dictionary to store buttons for each walking gate
         self.gate_buttons = {}
@@ -541,7 +559,7 @@ class gate_page(tk.Frame):
         for walking_gate in self.walking_gates:
             # Create button
             button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Init_walk, walking_gate))
-            button.grid(padx=5, pady=5, sticky="nw")
+            button.grid(padx=5, pady=(0, 5), sticky="nw")
             button.config(state=tk.DISABLED)
             
             # Store button
@@ -549,15 +567,21 @@ class gate_page(tk.Frame):
 
         # Dictionary for paths for each gate
         self.gate_paths = {}
+        
+    def show_path(self) -> None:
+        # Switch color to opposite
+        current_color = self.path_button.cget('style')
+        new_color = "success.TButton" if current_color == "danger.TButton" else "danger.TButton"
+        self.path_button.configure(style=new_color)
     
-    def gen_paths(self, event):
+    def gen_paths(self, event) -> None:
         # Generate path for each gait
         for walking_gate in self.walking_gates:
             # Get path type
             path_type = str(self.path.get())
 
             # Generate x, y, z data
-            xy_pos = self.path_types[path_type](distance=120, height=40)
+            xy_pos = self.path_types[path_type](distance=80, height=40)
             xyz_pos = convert2_3d(xy_lists=xy_pos, origin=(119.09-60, -119.09, -35.36), angle=0)
             
             self.gate_paths[walking_gate] = xyz_pos
@@ -580,8 +604,13 @@ class gate_page(tk.Frame):
         # Set counter to 0
         self.counter = 0
         
-        # Draw walking path
-        self.controller.Hex.plt_any(xyz_pos)
+        # Switch path of or on
+        if self.path_button.cget('style') == 'success.TButton':
+            # Draw walking path
+            self.controller.Hex.plt_any(plot=self.path_plot, xyz=xyz_pos)
+        else:
+            # Delete path visualization
+            self.controller.Hex.del_any(plot=self.path_plot)
 
         # Call update sim
         self.update_sim(angles)
@@ -615,12 +644,12 @@ def main() -> None:
                                          "Lg3": -225,
                                          "Lg4": -270,
                                          "Lg5": -315},
-                              angles = {"Lg0": [-45, 45, 90],
-                                        "Lg1": [-90, 45, 90],
-                                        "Lg2": [-135, 45, 90],
-                                        "Lg3": [-225, 45, 90],
-                                        "Lg4": [-270, 45, 90],
-                                        "Lg5": [-315, 45, 90]},
+                              angles =  {"Lg0": [-45, 45, 90],
+                                         "Lg1": [-90, 45, 90],
+                                         "Lg2": [-135, 45, 90],
+                                         "Lg3": [-225, 45, 90],
+                                         "Lg4": [-270, 45, 90],
+                                         "Lg5": [-315, 45, 90]},
                               origins = {"Lg0": (5, -5, 0),
                                          "Lg1": (0, -7, 0),
                                          "Lg2": (-5, -5, 0),
