@@ -1,19 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from ttkbootstrap import Style
 from functools import partial
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 import time
 import numpy as np
 
-
 from test_OOP import *
-from LegMath import *
-
-from numpy import sin, cos, radians, pi
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from ProjectMath import *
+from model import Hexapod, plt_object
 
 class Matplotlib3DPlotApp(tk.Tk):
     def __init__(self, offsets, angles, origins, *args, **kwargs):
@@ -66,7 +65,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.Simulation_init()
 
         # Page list
-        self.page_list = (main_page, slider_page, gate_page)
+        self.page_list = (main_page, angle_page, gate_page)
 
         # Page names
         self.page_names = tuple(''.join((class_str[i].capitalize() if i == 0 or not class_str[i - 1].isalpha() else class_str[i]) for i in range(len(class_str))).replace('_', ' ') for class_name in self.page_list for class_str in [class_name.__name__])
@@ -113,113 +112,19 @@ class Matplotlib3DPlotApp(tk.Tk):
             copy[key] = extracted_angles
 
     def Simulation_init(self):
-        # Initialize Dark-Mode
+        # Set style
         plt.style.use('dark_background')
-
-        # Create a 3D plot
+        
+        # Create the Simulation Plot
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        self.ax = fig.add_subplot(111, projection='3d')
 
-        # Set initial camera angles
-        ax.view_init(elev=45, azim=35, roll=0)
-
-        # Disable the user from changing the camera angle
-        # ax.disable_mouse_rotation()
+        self.Hex = Hexapod(ax=self.ax,
+                           origins=self.origins,
+                           lengths=(27, 70, 120),
+                           start_angels=self.start_angles)
         
-        ax.set_xlabel('xlabel', fontsize=18)
-        ax.set_ylabel('ylabel', fontsize=18)
-        ax.set_zlabel('zlabel', fontsize=18)
-        
-        class leg():
-
-            def __init__(self, lg_origin, lengths):
-                self.lg_origin = lg_origin
-                self.lengths = lengths
-
-                # Define Plot for each limb
-                self.coxa, = ax.plot([], [], [], color="green")
-                self.femur, = ax.plot([], [], [], color="red")
-                self.tibia, = ax.plot([], [], [], color="blue")
-
-            def update(self, limb, x, y, z):
-                limb.set_data(x, y)
-                limb.set_3d_properties(z)
-            
-            def clear_Leg(self):
-                self.coxa.remove()
-                self.femur.remove()
-                self.tibia.remove()
-
-            def plt_Leg(self, angles):
-                
-                limb0, limb1, limb2 = Forward_Kinematics(angles=angles, origin=self.lg_origin, lengths=self.lengths)
-
-                x0, y0, z0 = limb0
-                x1, y1, z1 = limb1
-                x2, y2, z2 = limb2
-                
-                print(x2[1], y2[1], z2[1])
-                print('LEG')
-                
-                self.update(self.coxa, x0, y0, z0)
-                self.update(self.femur, x1, y1, z1)
-                self.update(self.tibia, x2, y2, z2)
-        
-        class Hexapod():
-
-            def __init__(self, origins, lengths, start_angels):
-                self.lengths = lengths
-                self.origins = origins
-                self.legs = {}
-                
-                # Find x, y, z limits
-                leg_length = sum(self.lengths)
-                self.x_lim = leg_length+self.origins["Lg0"][0]
-                self.y_lim = leg_length
-                self.z_lim = leg_length+self.origins["Lg4"][2]
-                
-                # Set axis limit to prevent deformation of the plot when rectifying it
-                ax.set_xlim(-self.x_lim, self.x_lim)
-                ax.set_ylim(-self.y_lim, self.y_lim)
-                ax.set_zlim(-self.z_lim, self.z_lim)
-                
-                # Leg origin wire frame
-                x, y, z = [], [], []
-
-                for origin in self.origins:
-                    x.append(self.origins[origin][0])
-                    y.append(self.origins[origin][1])
-                    z.append(self.origins[origin][2])
-                
-                x.append(self.origins["Lg0"][0])
-                y.append(self.origins["Lg0"][1])
-                z.append(self.origins["Lg0"][2])
-
-                ax.plot(x, y, z)
-
-                # Front indicator
-                ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
-
-                # Initialize each leg and set plot its start position
-                for key in origins.keys():
-                    self.legs[key] = leg(origins[key], self.lengths)
-                    self.legs[key].plt_Leg(start_angels[key])
-            
-            def plt_any(self, x: list, y: list, z: list):
-                ax.plot(x, y, z, color="pink")
-
-            def plt_bot(self, angles, changed_legs):
-                # Clear plot and generate all necessary standard structures
-                # self.clr_plot()
-
-                # Update leg plot
-                for changed_leg in changed_legs:
-                    self.legs[changed_leg].plt_Leg(angles[changed_leg])
-                
-        # self.Leg = leg(lg_origin=(0,0,0), lengths=(10, 20, 30))
-        self.Hex = Hexapod(self.origins, (27, 70, 120), self.start_angles)
-        
-        plt.ion()
+        # plt.ion()
 
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
@@ -318,7 +223,7 @@ class main_page(tk.Frame):
         # Initialize Serial communication
         self.controller.Hexapod_Serial = Serial(port)
 
-class slider_page(tk.Frame):
+class angle_page(tk.Frame):
     def __init__(self, parent, style, controller):
         tk.Frame.__init__(self, parent, background=style.colors.primary)
         self.parent = parent
@@ -511,7 +416,7 @@ class slider_page(tk.Frame):
         return input_angle - offset_angle + 90
 
 class gate_page(tk.Frame):
-    def __init__(self, parent, style, controller):
+    def __init__(self, parent, style, controller) -> None:
         tk.Frame.__init__(self, parent, background=style.colors.primary)
         self.parent = parent
         self.style = style
@@ -519,52 +424,95 @@ class gate_page(tk.Frame):
 
         # Tuple to store walking gates names
         self.walking_gates = ["Tri Gate"]
+        
+        # Create plot object for showing walking paths
+        self.path_plot = plt_object(ax=self.controller.ax)
+
+        # Frame to for buttons
+        self.button_frame = ttk.Frame(self)
+        self.button_frame.grid(row=0, column=0, columnspan=2, sticky="nw")
+        
+        # Dictionary for path types
+        self.path_types = {'Sinusoidal': Sinusoidal_pattern, 'Square': Square_Pattern}
+        
+        self.path_names = ['Sinusoidal', 'Square']
+        
+        # Dropdown menu to set the path type to use
+        self.path = ttk.Combobox(self.button_frame, values=self.path_names, state="readonly")
+        self.path.grid(padx=5)
+        self.path.set("Select Path Type")
+        self.path.bind("<<ComboboxSelected>>", self.gen_paths)
+        
+        # Button to enable or disable showing the walking path
+        self.path_button = ttk.Button(self.button_frame, text='Show Path', style='success', command=self.show_path)
+        self.path_button.grid(row=0, column=1, pady=5)
 
         # Dictionary to store buttons for each walking gate
         self.gate_buttons = {}
 
-        # Frame to for buttons
-        self.button_frame = ttk.Frame(self)
-        self.button_frame.grid(row=0, column=1, sticky="nw")
-        
-        self.Legs_Inverse_Kinematics = {}
-
-        '''x_pos = np.linspace(82,222,114)
-        y_pos = np.linspace(-5,-5,114)
-        z_pos = np.linspace(0,0,114)'''
-
-        '''x_pos = np.linspace(150,150,114)
-        y_pos = np.linspace(-70,70,114)
-        d = sqrt((y_pos[len(y_pos)-1]-y_pos[0])**2)
-        z_pos = sin(y_pos*(pi/d)+np.absolute(y_pos[0])*(pi/d))*40'''
-        # z_pos = round(z_pos)
-        
-        x_pos, y_pos = Square_Pattern(distance=120, height=40)
-        x_pos, y_pos, z_pos = convert2_3d(xy_lists=(x_pos, y_pos), origin=(119.09-60, -119.09, -35.36), angle=0)
-        
-        self.controller.Hex.plt_any(x_pos, y_pos, z_pos)
-        print(x_pos, y_pos, z_pos)
-        
-        angle_list = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=(x_pos,y_pos,z_pos))
-        angle_list = turn2int(angle_list)
-
         # Create button for each walking gate
         for walking_gate in self.walking_gates:
             # Create button
-            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Follow_line, angle_list=angle_list))
-            button.grid(pady=5, sticky="nw")
+            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Init_walk, walking_gate))
+            button.grid(padx=5, pady=(0, 5), sticky="nw")
+            button.config(state=tk.DISABLED)
             
             # Store button
             self.gate_buttons[walking_gate] = button
+
+        # Dictionary for paths for each gate
+        self.gate_paths = {}
+        
+    def show_path(self) -> None:
+        # Switch color to opposite
+        current_color = self.path_button.cget('style')
+        new_color = "success.TButton" if current_color == "danger.TButton" else "danger.TButton"
+        self.path_button.configure(style=new_color)
     
-    def update_sim(self):
-        if not self.counter == self.Stop:
+    def gen_paths(self, event) -> None:
+        # Generate path for each gait
+        for walking_gate in self.walking_gates:
+            # Get path type
+            path_type = str(self.path.get())
+
+            # Generate x, y, z data
+            xy_pos = self.path_types[path_type](distance=80, height=40)
+            xyz_pos = convert2_3d(xy_lists=xy_pos, origin=(119.09-60, -119.09, -35.36), angle=0)
             
+            self.gate_paths[walking_gate] = xyz_pos
+        
+        # Enable gate buttons
+        for button in self.gate_buttons.values():
+            button.config(state='readonly')
+    
+    def Init_walk(self, gait: str) -> None:
+        # Get angles for specific gate
+        xyz_pos = self.gate_paths[gait]
+        
+        # Convert x, y, z data to angles
+        angles = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=xyz_pos)
+        angles = turn2int(angles)
 
-            self.counter+=1
-            print(self.counter)
+        # Get stop
+        self.Stop = len(angles[0])
 
-            theta0_list, theta1_list, theta2_list = self.angle_list
+        # Set counter to 0
+        self.counter = 0
+        
+        # Switch path of or on
+        if self.path_button.cget('style') == 'success.TButton':
+            # Draw walking path
+            self.path_plot.plt_any(xyz=xyz_pos)
+        else:
+            # Delete path visualization
+            self.path_plot.del_any()
+
+        # Call update sim
+        self.update_sim(angles)
+        
+    def update_sim(self, angles) -> None:
+        if not self.counter == self.Stop:
+            theta0_list, theta1_list, theta2_list = angles
 
             self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
             self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
@@ -580,30 +528,23 @@ class gate_page(tk.Frame):
 
             self.controller.Hexapod_Serial.Serial_print(message)
             
-            self.after(20, self.update_sim)
-    
-    def Follow_line(self, angle_list):
-        self.angle_list = angle_list
+            self.after(20, partial(self.update_sim, angles))
         
-        self.Stop = len(angle_list[0])-1
-        print(self.Stop)
-        self.counter = 0
+        self.counter+=1
 
-        self.update_sim()
-
-def main():
+def main() -> None:
     app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
                                          "Lg1": -90,
                                          "Lg2": -135,
                                          "Lg3": -225,
                                          "Lg4": -270,
                                          "Lg5": -315},
-                              angles = {"Lg0": [-45, 45, 90],
-                                        "Lg1": [-90, 45, 90],
-                                        "Lg2": [-135, 45, 90],
-                                        "Lg3": [-225, 45, 90],
-                                        "Lg4": [-270, 45, 90],
-                                        "Lg5": [-315, 45, 90]},
+                              angles =  {"Lg0": [-45, 45, 90],
+                                         "Lg1": [-90, 45, 90],
+                                         "Lg2": [-135, 45, 90],
+                                         "Lg3": [-225, 45, 90],
+                                         "Lg4": [-270, 45, 90],
+                                         "Lg5": [-315, 45, 90]},
                               origins = {"Lg0": (5, -5, 0),
                                          "Lg1": (0, -7, 0),
                                          "Lg2": (-5, -5, 0),
