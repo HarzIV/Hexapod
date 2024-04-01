@@ -11,7 +11,8 @@ import time
 import numpy as np
 
 from test_OOP import *
-from LegMath import *
+from ProjectMath import *
+from model import Hexapod, plt_object
 
 class Matplotlib3DPlotApp(tk.Tk):
     def __init__(self, offsets, angles, origins, *args, **kwargs):
@@ -111,125 +112,19 @@ class Matplotlib3DPlotApp(tk.Tk):
             copy[key] = extracted_angles
 
     def Simulation_init(self):
-        # Initialize Dark-Mode
+        # Set style
         plt.style.use('dark_background')
-
-        # Create a 3D plot
+        
+        # Create the Simulation Plot
         fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
+        self.ax = fig.add_subplot(111, projection='3d')
 
-        # Set initial camera angles
-        ax.view_init(elev=45, azim=35, roll=0)
-
-        # Disable the user from changing the camera angle
-        # ax.disable_mouse_rotation()
+        self.Hex = Hexapod(ax=self.ax,
+                           origins=self.origins,
+                           lengths=(27, 70, 120),
+                           start_angels=self.start_angles)
         
-        ax.set_xlabel('xlabel', fontsize=18)
-        ax.set_ylabel('ylabel', fontsize=18)
-        ax.set_zlabel('zlabel', fontsize=18)
-        
-        class leg():
-
-            def __init__(self, lg_origin, lengths) -> None:
-                self.lg_origin = lg_origin
-                self.lengths = lengths
-
-                # Define Plot for each limb
-                self.coxa, = ax.plot([], [], [], color="green")
-                self.femur, = ax.plot([], [], [], color="red")
-                self.tibia, = ax.plot([], [], [], color="blue")
-
-            def update(self, limb, x, y, z):
-                limb.set_data(x, y)
-                limb.set_3d_properties(z)
-            
-            def clear_Leg(self):
-                self.coxa.remove()
-                self.femur.remove()
-                self.tibia.remove()
-
-            def plt_Leg(self, angles):
-                
-                limb0, limb1, limb2 = Forward_Kinematics(angles=angles, origin=self.lg_origin, lengths=self.lengths)
-
-                x0, y0, z0 = limb0
-                x1, y1, z1 = limb1
-                x2, y2, z2 = limb2
-                
-                print(x2[1], y2[1], z2[1])
-                print('LEG')
-                
-                self.update(self.coxa, x0, y0, z0)
-                self.update(self.femur, x1, y1, z1)
-                self.update(self.tibia, x2, y2, z2)
-        
-        class Hexapod():
-
-            def __init__(self, origins, lengths, start_angels):
-                self.lengths = lengths
-                self.origins = origins
-                self.legs = {}
-                
-                # Find x, y, z limits
-                leg_length = sum(self.lengths)
-                self.x_lim = leg_length+self.origins["Lg0"][0]
-                self.y_lim = leg_length
-                self.z_lim = leg_length+self.origins["Lg4"][2]
-                
-                # Set axis limit to prevent deformation of the plot when rectifying it
-                ax.set_xlim(-self.x_lim, self.x_lim)
-                ax.set_ylim(-self.y_lim, self.y_lim)
-                ax.set_zlim(-self.z_lim, self.z_lim)
-                
-                # Leg origin wire frame
-                x, y, z = [], [], []
-
-                for origin in self.origins:
-                    x.append(self.origins[origin][0])
-                    y.append(self.origins[origin][1])
-                    z.append(self.origins[origin][2])
-                
-                x.append(self.origins["Lg0"][0])
-                y.append(self.origins["Lg0"][1])
-                z.append(self.origins["Lg0"][2])
-
-                ax.plot(x, y, z)
-
-                # Front indicator
-                ax.scatter(self.origins["Lg0"][0], 0, 0, color="red")
-
-                # Initialize each leg and set plot its start position
-                for key in origins.keys():
-                    self.legs[key] = leg(origins[key], self.lengths)
-                    self.legs[key].plt_Leg(start_angels[key])
-            
-            def create_plt(self):
-                plot, = ax.plot([], [], [], color="pink")
-                
-                return plot
-            
-            def plt_any(self, plot, xyz: tuple[list, list, list]):
-                x, y, z = xyz
-
-                plot.set_data(x, y)
-                plot.set_3d_properties(z)
-            
-            def del_any(self, plot) -> None:
-                plot.set_data([], [])
-                plot.set_3d_properties([])
-
-            def plt_bot(self, angles, changed_legs):
-                # Clear plot and generate all necessary standard structures
-                # self.clr_plot()
-
-                # Update leg plot
-                for changed_leg in changed_legs:
-                    self.legs[changed_leg].plt_Leg(angles[changed_leg])
-                
-        # self.Leg = leg(lg_origin=(0,0,0), lengths=(10, 20, 30))
-        self.Hex = Hexapod(self.origins, (27, 70, 120), self.start_angles)
-        
-        plt.ion()
+        # plt.ion()
 
         # Embed the plot into the Tkinter window
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
@@ -531,7 +426,7 @@ class gate_page(tk.Frame):
         self.walking_gates = ["Tri Gate"]
         
         # Create plot object for showing walking paths
-        self.path_plot = self.controller.Hex.create_plt()
+        self.path_plot = plt_object(ax=self.controller.ax)
 
         # Frame to for buttons
         self.button_frame = ttk.Frame(self)
@@ -542,7 +437,7 @@ class gate_page(tk.Frame):
         
         self.path_names = ['Sinusoidal', 'Square']
         
-        # Dropdown menu to set the com port to use
+        # Dropdown menu to set the path type to use
         self.path = ttk.Combobox(self.button_frame, values=self.path_names, state="readonly")
         self.path.grid(padx=5)
         self.path.set("Select Path Type")
@@ -607,10 +502,10 @@ class gate_page(tk.Frame):
         # Switch path of or on
         if self.path_button.cget('style') == 'success.TButton':
             # Draw walking path
-            self.controller.Hex.plt_any(plot=self.path_plot, xyz=xyz_pos)
+            self.path_plot.plt_any(xyz=xyz_pos)
         else:
             # Delete path visualization
-            self.controller.Hex.del_any(plot=self.path_plot)
+            self.path_plot.del_any()
 
         # Call update sim
         self.update_sim(angles)
