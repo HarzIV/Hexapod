@@ -421,9 +421,6 @@ class gate_page(tk.Frame):
         self.parent = parent
         self.style = style
         self.controller = controller
-
-        # Tuple to store walking gates names
-        self.walking_gates = ["Tri Gate"]
         
         # Create plot object for showing walking paths
         self.path_plot = plt_object(ax=self.controller.ax)
@@ -446,19 +443,20 @@ class gate_page(tk.Frame):
         # Button to enable or disable showing the walking path
         self.path_button = ttk.Button(self.button_frame, text='Show Path', style='success', command=self.show_path)
         self.path_button.grid(row=0, column=1, pady=5)
-
-        # Dictionary to store buttons for each walking gate
-        self.gate_buttons = {}
-
-        # Create button for each walking gate
-        for walking_gate in self.walking_gates:
-            # Create button
-            button = ttk.Button(self.button_frame, text=walking_gate, command=partial(self.Init_walk, walking_gate))
-            button.grid(padx=5, pady=(0, 5), sticky="nw")
-            button.config(state=tk.DISABLED)
-            
-            # Store button
-            self.gate_buttons[walking_gate] = button
+        
+        # Tuple to store walking gates names
+        self.gates = ["Tripod"]
+        
+        # Dropdown menu to set the path type to use
+        self.gate = ttk.Combobox(self.button_frame, values=self.gates, state="readonly")
+        self.gate.grid(padx=5)
+        self.gate.set("Select Path Type")
+        self.gate.bind("<<ComboboxSelected>>", self.set_gate)
+        
+        # Run 
+        self.run = ttk.Button(self.button_frame, text='Run')
+        self.run.grid(row=1, column=1, sticky='nsew')
+        self.run.config(state=tk.DISABLED)
 
         # Dictionary for paths for each gate
         self.gate_paths = {}
@@ -468,10 +466,17 @@ class gate_page(tk.Frame):
         current_color = self.path_button.cget('style')
         new_color = "success.TButton" if current_color == "danger.TButton" else "danger.TButton"
         self.path_button.configure(style=new_color)
+        
+    def set_gate(self, event) -> None:
+        # Get chosen gate
+        self.active_gate = self.gate.get()
+        
+        # Enable run button
+        self.run.config(state='readonly', command=partial(self.Init_gate, self.active_gate))
     
     def gen_paths(self, event) -> None:
         # Generate path for each gait
-        for walking_gate in self.walking_gates:
+        for walking_gate in self.gates:
             # Get path type
             path_type = str(self.path.get())
 
@@ -480,14 +485,10 @@ class gate_page(tk.Frame):
             xyz_pos = convert2_3d(xy_lists=xy_pos, origin=(119.09-60, -119.09, -35.36), angle=0)
             
             self.gate_paths[walking_gate] = xyz_pos
-        
-        # Enable gate buttons
-        for button in self.gate_buttons.values():
-            button.config(state='readonly')
     
-    def Init_walk(self, gait: str) -> None:
+    def Init_gate(self, gate: str) -> None:
         # Get angles for specific gate
-        xyz_pos = self.gate_paths[gait]
+        xyz_pos = self.gate_paths[gate]
         
         # Convert x, y, z data to angles
         angles = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=xyz_pos)
@@ -528,7 +529,7 @@ class gate_page(tk.Frame):
 
             self.controller.Hexapod_Serial.Serial_print(message)
             
-            self.after(20, partial(self.update_sim, angles))
+            self.after(500, partial(self.update_sim, angles))
         
         self.counter+=1
 

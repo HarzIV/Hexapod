@@ -1,4 +1,4 @@
-from numpy import sqrt, sin, cos, arccos, arctan2, degrees, radians, pi, all, arange, array
+from numpy import sqrt, sin, cos, arccos, arctan2, degrees, radians, pi, all, arange, array, append
 
 # Inverse Kinematics For Hexapod Leg
 def Inverse_Kinematics(origin: tuple[float, float, float], lengths: tuple[float, float, float], coordinates: tuple[float, float, float]) -> tuple[float, float, float]:
@@ -70,22 +70,22 @@ def turn2int(angles):
     return angles[0].astype(int), angles[1].astype(int), angles[2].astype(int)
 
 # Generate Sinusoidal Walking Pattern
-def Sinusoidal_pattern(distance: float, resolution: int=20) -> tuple[float, float]:
+def Sinusoidal_pattern(distance: float, height: float, resolution: int=20) -> tuple[float, float]:
     # determines the size for each step of the resolution to cover the distance
     step = distance / resolution
 
     adjustment_value = pi / distance
 
-    x_pos = arange(0, distance + step, step)
+    x_pos = append(arange(0, distance + step, step), 0)
 
-    y_pos = sin(x_pos * adjustment_value)
+    y_pos = sin(x_pos * adjustment_value) * height
 
     return x_pos, y_pos
 
 def Square_Pattern(distance: float, height: float=10) -> tuple[float, float]:
 
-    x_pos = array([0, 0, distance, distance])
-    y_pos = array([0, height, height, 0])
+    x_pos = array([0, 0, distance, distance, 0])
+    y_pos = array([0, height, height, 0, 0])
 
     return x_pos, y_pos
 
