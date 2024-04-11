@@ -32,7 +32,7 @@ def Inverse_Kinematics(origin: tuple[float, float, float], lengths: tuple[float,
 
     return theta0, theta1, theta2
 
-def Forward_Kinematics(origin: tuple[float, float, float], lengths: tuple[float, float, float], angles: list[float], accuracy: int=2) -> tuple[list[float], list[float], list[float]]:
+def Forward_Kinematics(lengths: tuple[float, float, float], origin: tuple[float, float, float], angles: list[float], accuracy: int=2) -> tuple[list[float], list[float], list[float]]:
 
     theta0, theta1, theta2 = angles
     theta0, theta1, theta2 = radians(theta0), radians(theta1), radians(theta2)
@@ -70,22 +70,33 @@ def turn2int(angles):
     return angles[0].astype(int), angles[1].astype(int), angles[2].astype(int)
 
 # Generate Sinusoidal Walking Pattern
-def Sinusoidal_pattern(distance: float, height: float, resolution: int=20) -> tuple[float, float]:
+def Sinusoidal_pattern(distance: float,
+                       height: float,
+                       Reverse: bool=False,
+                       resolution: int=20) -> tuple[float, float]:
     # determines the size for each step of the resolution to cover the distance
     step = distance / resolution
 
     adjustment_value = pi / distance
 
-    x_pos = append(arange(0, distance + step, step), 0)
+    if Reverse:
+        x_pos = append(0, arange(0, distance + step, step))
+    else:
+        x_pos = append(arange(0, distance + step, step), 0)
 
     y_pos = sin(x_pos * adjustment_value) * height
 
     return x_pos, y_pos
 
-def Square_Pattern(distance: float, height: float=10) -> tuple[float, float]:
-
-    x_pos = array([0, 0, distance, distance, 0])
-    y_pos = array([0, height, height, 0, 0])
+def Square_Pattern(distance: float,
+                   height: float=10,
+                   Reverse: bool=False) -> tuple[float, float]:
+    if Reverse:
+        x_pos = array([distance, 0, 0, distance, distance])
+        y_pos = array([0, 0, height, height, 0])
+    else:
+        x_pos = array([0, distance, distance, 0, 0])
+        y_pos = array([0, 0, height, height, 0])
 
     return x_pos, y_pos
 

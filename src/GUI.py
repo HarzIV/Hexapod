@@ -15,7 +15,11 @@ from ProjectMath import *
 from model import Hexapod, plt_object
 
 class Matplotlib3DPlotApp(tk.Tk):
-    def __init__(self, offsets, angles, origins, *args, **kwargs):
+    def __init__(self, lengths: tuple[float, float, float],
+                       offsets: dict[str, float],
+                       angles: dict[str, list[float]],
+                       origins: dict[str, tuple[float, float, float]],
+                       *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         # Initialize root functions
@@ -25,6 +29,7 @@ class Matplotlib3DPlotApp(tk.Tk):
         self.resizable(0, 0)
 
         # Define variables
+        self.lengths = lengths
         self.start_angles = angles
 
         # Create empty dictionary's
@@ -121,7 +126,7 @@ class Matplotlib3DPlotApp(tk.Tk):
 
         self.Hex = Hexapod(ax=self.ax,
                            origins=self.origins,
-                           lengths=(27, 70, 120),
+                           lengths=self.lengths,
                            start_angels=self.start_angles)
         
         # plt.ion()
@@ -422,6 +427,16 @@ class gate_page(tk.Frame):
         self.style = style
         self.controller = controller
         
+        # Leg end points
+        self.end_points: dict[str, tuple[float, float, float]] = {}
+
+        # Generate end points
+        for key in self.controller.start_angles.keys():
+            x, y, z = Forward_Kinematics(lengths=self.controller.lengths,
+                                         origin=self.controller.origins[key],
+                                         angles=self.controller.start_angles[key])
+            self.end_points[key] = x[2][1], y[2][1], z[2][1]
+
         # Create plot object for showing walking paths
         self.path_plot = plt_object(ax=self.controller.ax)
 
@@ -459,7 +474,7 @@ class gate_page(tk.Frame):
         self.run.config(state=tk.DISABLED)
 
         # Dictionary for paths for each gate
-        self.gate_paths = {}
+        self.gate_paths: dict[str, dict[str, tuple[float, float, float]]] = {}
         
     def show_path(self) -> None:
         # Switch color to opposite
@@ -467,7 +482,16 @@ class gate_page(tk.Frame):
         new_color = "success.TButton" if current_color == "danger.TButton" else "danger.TButton"
         self.path_button.configure(style=new_color)
         
-    def set_gate(self, event) -> None:
+        # Switch path of or on
+        if new_color == 'success.TButton':
+            for value in self.gate_paths[self.active_gate].values():
+                # Draw walking path
+                self.path_plot.plt_any(xyz=value)
+        else:
+            # Delete path visualization
+            self.path_plot.del_any()
+        
+    def set_gate(self, event: tk.Event) -> None:
         # Get chosen gate
         self.active_gate = self.gate.get()
         
@@ -479,62 +503,65 @@ class gate_page(tk.Frame):
         for walking_gate in self.gates:
             # Get path type
             path_type = str(self.path.get())
+            
+            self.gate_paths[walking_gate] = {}
 
             # Generate x, y, z data
-            xy_pos = self.path_types[path_type](distance=80, height=40)
-            xyz_pos = convert2_3d(xy_lists=xy_pos, origin=(119.09-60, -119.09, -35.36), angle=0)
+            xy_pos = self.path_types[path_type](distance=80, height=40, Reverse=True)
+            for key, value in self.end_points.items():
+                value = value[0]-60, value[1], value[2]
+                xyz_pos = convert2_3d(xy_lists=xy_pos, origin=value, angle=0)
+                # (119.09-60, -119.09, -35.36)
             
-            self.gate_paths[walking_gate] = xyz_pos
+                self.gate_paths[walking_gate][key] = xyz_pos
     
     def Init_gate(self, gate: str) -> None:
-        # Get angles for specific gate
-        xyz_pos = self.gate_paths[gate]
-        
-        # Convert x, y, z data to angles
-        angles = Inverse_Kinematics(lengths=(27, 70, 120), origin=self.controller.origins['Lg0'], coordinates=xyz_pos)
-        angles = turn2int(angles)
+        all_angles = {}
+        print(self.gate_paths)
+        for key, value in self.gate_paths[gate].items():
+            print(key)
+            # Convert x, y, z data to angles
+            angles = Inverse_Kinematics(lengths=self.controller.lengths,
+                                        origin=self.controller.origins[key],
+                                        coordinates=value)
+            all_angles[key] = turn2int(angles)
 
         # Get stop
-        self.Stop = len(angles[0])
+        self.Stop = len(all_angles['Lg0'])
 
         # Set counter to 0
         self.counter = 0
-        
-        # Switch path of or on
-        if self.path_button.cget('style') == 'success.TButton':
-            # Draw walking path
-            self.path_plot.plt_any(xyz=xyz_pos)
-        else:
-            # Delete path visualization
-            self.path_plot.del_any()
 
         # Call update sim
-        self.update_sim(angles)
+        self.update_sim(all_angles)
         
-    def update_sim(self, angles) -> None:
+    def update_sim(self, all_angles) -> None:
         if not self.counter == self.Stop:
-            theta0_list, theta1_list, theta2_list = angles
+            for key, value in all_angles.items():
+                theta0_list, theta1_list, theta2_list = value
 
-            self.controller.new_angles["Lg0"][0] = theta0_list[self.counter]
-            self.controller.new_angles["Lg0"][1] = theta1_list[self.counter]
-            self.controller.new_angles["Lg0"][2] = theta2_list[self.counter]
+                self.controller.new_angles[key][0] = theta0_list[self.counter]
+                self.controller.new_angles[key][1] = theta1_list[self.counter] + 45 + 90
+                self.controller.new_angles[key][2] = 180 - theta2_list[self.counter]
             
             self.controller.update_Simulation()
-            
-            self.controller.new_angles["Lg0"][0] = theta0_list[self.counter] + 45 + 90
-            self.controller.new_angles["Lg0"][2] = 180 - theta2_list[self.counter]
             
             message = self.controller.Hexapod_Serial.Generate_full_message(angles=self.controller.new_angles)
             print(message)
 
             self.controller.Hexapod_Serial.Serial_print(message)
             
-            self.after(500, partial(self.update_sim, angles))
+            self.after(20, partial(self.update_sim, all_angles))
+        else:
+            self.counter = 0
+            self.after(20, partial(self.update_sim, all_angles))
         
         self.counter+=1
+        print(self.counter)
 
 def main() -> None:
-    app = Matplotlib3DPlotApp(offsets = {"Lg0": -45,
+    app = Matplotlib3DPlotApp(lengths=(27, 70, 120),
+                              offsets = {"Lg0": -45,
                                          "Lg1": -90,
                                          "Lg2": -135,
                                          "Lg3": -225,
