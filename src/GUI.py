@@ -432,13 +432,18 @@ class gate_page(tk.Frame):
 
         # Generate end points
         for key in self.controller.start_angles.keys():
-            x, y, z = Forward_Kinematics(lengths=self.controller.lengths,
+            xyz = Forward_Kinematics(lengths=self.controller.lengths,
                                          origin=self.controller.origins[key],
-                                         angles=self.controller.start_angles[key])
-            self.end_points[key] = x[2][1], y[2][1], z[2][1]
+                                         angles=self.controller.start_angles[key])[2]
+
+            self.end_points[key] = xyz[0][1], xyz[1][1], xyz[2][1]
+        print(self.end_points)
 
         # Create plot object for showing walking paths
-        self.path_plot = plt_object(ax=self.controller.ax)
+        self.path_plots = {}
+
+        for key in self.controller.start_angles.keys():
+            self.path_plots[key] = plt_object(ax=self.controller.ax)
 
         # Frame to for buttons
         self.button_frame = ttk.Frame(self)
@@ -484,12 +489,15 @@ class gate_page(tk.Frame):
         
         # Switch path of or on
         if new_color == 'success.TButton':
-            for value in self.gate_paths[self.active_gate].values():
+            for xyz_pos, path_plot in zip(self.gate_paths[self.active_gate].values(),
+                                          self.path_plots.values()):
                 # Draw walking path
-                self.path_plot.plt_any(xyz=value)
+                path_plot.plt_any(xyz=xyz_pos)
+            self.controller.canvas.draw()
         else:
             # Delete path visualization
-            self.path_plot.del_any()
+            for path_plot in self.path_plots.values():
+                path_plot.del_any()
         
     def set_gate(self, event: tk.Event) -> None:
         # Get chosen gate
@@ -509,11 +517,13 @@ class gate_page(tk.Frame):
             # Generate x, y, z data
             xy_pos = self.path_types[path_type](distance=80, height=40, Reverse=True)
             for key, value in self.end_points.items():
-                value = value[0]-60, value[1], value[2]
+                value = value[0]-40, value[1], value[2]
                 xyz_pos = convert2_3d(xy_lists=xy_pos, origin=value, angle=0)
                 # (119.09-60, -119.09, -35.36)
             
                 self.gate_paths[walking_gate][key] = xyz_pos
+            
+            print(self.gate_paths[walking_gate])
     
     def Init_gate(self, gate: str) -> None:
         all_angles = {}
