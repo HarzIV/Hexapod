@@ -7,12 +7,7 @@ def Inverse_Kinematics(origin: tuple[float, float, float], lengths: tuple[float,
     xo, yo, zo = origin
     L0, L1, L2 = lengths
 
-    # Calculating theta0 isn't the same for all quadrants
-
-    if all(x >= xo):
-        theta0 = degrees(arctan2((y - yo), (x - xo)))
-    else:
-        theta0 = 180 + degrees(arctan2((y - yo), (x - xo)))
+    theta0 = degrees(arctan2((y - yo), (x - xo)))
     
     x = sqrt((x-xo)**2+(y-yo)**2) - L0
 
@@ -117,3 +112,13 @@ def convert2_3d(xy_lists, angle: float, origin=(0,0,0)) -> tuple[float, float, f
     z = zo + y_pos
 
     return x, y, z
+
+# xy_pos = Square_Pattern(distance=80, height=40)
+
+# xyz = convert2_3d(xy_lists=xy_pos, origin=(0.0-40, -168.35, -35.36), angle=0)
+
+# print(xyz)
+
+# print(Inverse_Kinematics((0, -7, 0), (27, 70, 120), xyz))
+
+# print(degrees(arctan2(-4, -4)))

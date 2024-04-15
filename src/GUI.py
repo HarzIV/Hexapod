@@ -522,7 +522,7 @@ class gate_page(tk.Frame):
                 # (119.09-60, -119.09, -35.36)
             
                 self.gate_paths[walking_gate][key] = xyz_pos
-            
+            print(self.end_points)
             print(self.gate_paths[walking_gate])
     
     def Init_gate(self, gate: str) -> None:
@@ -531,13 +531,15 @@ class gate_page(tk.Frame):
         for key, value in self.gate_paths[gate].items():
             print(key)
             # Convert x, y, z data to angles
+            print(value)
             angles = Inverse_Kinematics(lengths=self.controller.lengths,
                                         origin=self.controller.origins[key],
                                         coordinates=value)
+            print(angles)
             all_angles[key] = turn2int(angles)
 
         # Get stop
-        self.Stop = len(all_angles['Lg0'])
+        self.Stop = len(all_angles['Lg0'][0])
 
         # Set counter to 0
         self.counter = 0
@@ -551,8 +553,8 @@ class gate_page(tk.Frame):
                 theta0_list, theta1_list, theta2_list = value
 
                 self.controller.new_angles[key][0] = theta0_list[self.counter]
-                self.controller.new_angles[key][1] = theta1_list[self.counter] + 45 + 90
-                self.controller.new_angles[key][2] = 180 - theta2_list[self.counter]
+                self.controller.new_angles[key][1] = theta1_list[self.counter]
+                self.controller.new_angles[key][2] = theta2_list[self.counter]
             
             self.controller.update_Simulation()
             
@@ -560,14 +562,12 @@ class gate_page(tk.Frame):
             print(message)
 
             self.controller.Hexapod_Serial.Serial_print(message)
-            
-            self.after(20, partial(self.update_sim, all_angles))
         else:
             self.counter = 0
-            self.after(20, partial(self.update_sim, all_angles))
         
         self.counter+=1
-        print(self.counter)
+        print(self.counter, self.Stop)
+        self.after(200, partial(self.update_sim, all_angles))
 
 def main() -> None:
     app = Matplotlib3DPlotApp(lengths=(27, 70, 120),
